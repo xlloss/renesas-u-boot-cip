@@ -30,3 +30,18 @@ config SYS_CONFIG_NAME
 
 endif
 
+if TARGET_SMARC_RZG2L_GNK
+
+config SYS_SOC
+	default "rmobile"
+
+config SYS_BOARD
+	default "rzg2l-dev"
+
+config SYS_VENDOR
+	default "renesas"
+
+config SYS_CONFIG_NAME
+	default "smarc-rzg2l-gnk"
+
+endif

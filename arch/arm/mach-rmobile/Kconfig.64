@@ -197,6 +197,11 @@ config TARGET_SMARC_RZV2L_GNK
 	help
           Support for Renesas RZ/V2L Dev Platform
 
+config TARGET_SMARC_RZG2L_GNK
+	bool "RZ/G2L GNK board"
+	help
+          Support for Renesas RZ/G2L Dev Platform
+
 config TARGET_RZG2LC_DEV
 	bool "RZ/G2LC Dev board"
 	help
