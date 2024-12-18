@@ -78,6 +78,8 @@
 #include <efi_loader.h>
 #endif
 
+#include "../drivers/video/rzg2l/rzg2l_video.h"
+
 DECLARE_GLOBAL_DATA_PTR;
 
 ulong monitor_flash_len;
@@ -812,6 +814,7 @@ static init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_EFI_SETUP_EARLY
 	(init_fnc_t)efi_init_obj_list,
 #endif
+	rzg2l_video_init,
 	run_main_loop,
 };
 
