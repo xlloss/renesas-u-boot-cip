@@ -60,8 +60,8 @@
 #define USB_Ch1_Host_base_addr          0x11C70000UL
 
 #define CPG_CLKMON_LCDC                 0x06EC
-#define CLK1_MON_CLK_SUPPLIED           (1 < 1)
-#define CLK0_MON_CLK_SUPPLIED           (1 < 0)
+#define CLK1_MON_CLK_SUPPLIED           (1 << 1)
+#define CLK0_MON_CLK_SUPPLIED           (1 << 0)
 
 #define CPG_RSTMON_LCDC                 0x09EC
 #define RST0_MON                        (1 << 0)

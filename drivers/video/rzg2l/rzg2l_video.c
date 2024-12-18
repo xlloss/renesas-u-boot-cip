@@ -339,10 +339,11 @@ static const uint32_t fcpvd_register_values[][2] = {
     // {0x10880018,0x00000000},
 };
 
+#define CPG_PL1_DDIV 0x200
 #ifdef DSI_PANEL
 static const uint32_t cpg_register_values[][2] = {
-/*  {0x11010200, 0x10000000},*/ //CPG_PL1_DDIV
-    {0x11010204, 0x10000000 | (CPG_LPCLK_DIV<<12)},//CPG_PL2_DDIV
+/*  {CPG_base_addr + CPG_PL1_DDIV, 0x10000000},*/ //CPG_PL1_DDIV
+    {0x11010204, 0x10000000 | (CPG_LPCLK_DIV << 12)},//CPG_PL2_DDIV
     {0x11010420, 0x01010000 | (CPG_DSI_DIV_A<<0) | (CPG_DSI_DIV_B << 8)},//CPG_PL5_SDIV
     {0x11010144, 0x01110000 | (CPG_PL5_POSTDIV1<<0) | (CPG_PL5_POSTDIV2<<4) | (CPG_PL5_REFDIV<<8)},//CPG_SIPLL5_CLK1
 /*  {0x11010148, 0x01000100},*/ //CPG_SIPLL5_CLK2
