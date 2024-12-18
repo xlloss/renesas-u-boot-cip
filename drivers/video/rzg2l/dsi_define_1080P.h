@@ -3,7 +3,7 @@
 
 #define CPG_LPCLK_DIV       0
 
-/* 1080p 148.5MHz	*/
+/* 1080p 148.5MHz */
 #define CPG_PL5_REFDIV      2
 #define CPG_PL5_INTIN       148
 #define CPG_PL5_FRACIN      8388608
@@ -47,9 +47,9 @@
 #define DSI_VSEN            0
 
 // Define For ADV7535
-#define refresh 60     // Frame rate
-#define xres 1920      // resolution x
-#define yres 1080      // resolution y
+#define refresh 60         // Frame rate
+#define xres 1920          // resolution x
+#define yres 1080          // resolution y
 #define left_margin 148    // Hback
 #define right_margin 88    // Hfront
 #define upper_margin 36    // Vback
@@ -59,15 +59,15 @@
 
 //DU
 #define LCD_HACTIVE         1920   // resolution x
-#define LCD_VACTIVE         1080	// resolution y
+#define LCD_VACTIVE         1080   // resolution y
 #define LCD_HFRONT          88     // Hfront
 #define LCD_HSYNC           44     // Hsync
 #define LCD_HBACK           148    // Hback
 #define LCD_VFRONT          4      // Vfront
-#define LCD_VSYNC           5	    // Vsync
+#define LCD_VSYNC           5      // Vsync
 #define LCD_VBACK           36     // Vback
-#define LCD_VSPOL           1	//vsync polarity
-#define LCD_HSPOL           1	//hsync polarity
+#define LCD_VSPOL           1      // vsync polarity
+#define LCD_HSPOL           1      // hsync polarity
 #define LCD_DEMD            0x3
 
 // .name = "1920x1080",
@@ -89,9 +89,9 @@
 
 //VSPD
 #define LCD_BPP             24
-#define LCD_VIR             0//Virtual Input Enable
+#define LCD_VIR             0         //Virtual Input Enable
 #define LCD_RDFMT           0x18
-#define LCD_RDCSC           0//Color Space Conversion Enable
+#define LCD_RDCSC           0         //Color Space Conversion Enable
 #define LCD_SRCM_ADDR       0x58000000
 #define LCD_WRFMT           0x18
 #define LCD_WRCSC           0
