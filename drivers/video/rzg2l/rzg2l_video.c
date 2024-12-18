@@ -194,35 +194,31 @@ static void set_white_screen_display(uint32_t   *framebuffer, uint8_t color)
 	uint32_t	size = LCD_HACTIVE * LCD_VACTIVE * (DISPLAY_BITS_PER_PIXEL_INPUT0 >> 3);
 	dcache_disable();
 	printf("%s: start: framebuffer[Addr:%8X] set to %x\r\n", __func__, framebuffer, color);
-    memset( framebuffer, color, size);
-    dcache_enable();
+	memset( framebuffer, color, size);
+	dcache_enable();
 }
 
 int rzg2l_video_init(void)
 {
 	printf("%s: start\r\n", __func__);
-    /////// adv7535_deinit();
-//    rzg2l_cpg_init();
+	/* adv7535_deinit(); */
+	/* rzg2l_cpg_init(); */
 
-    /* Pinmux setup for DPI panel */
-    rzg2l_dpi_pin_init();
-
+	/* Pinmux setup for DPI panel */
+	rzg2l_dpi_pin_init();
 
 	/* CPG setup for DPI panel */
 	rzg2l_dpi_cpg_init();
 
-
-
-
 	/* Initialize display buffer */
-	set_white_screen_display( g_framebuffer, 0xff);
+	set_white_screen_display(g_framebuffer, 0xff);
 
-    rzg2l_du_init();
-    rzg2l_vcpd_init();
-    rzg2l_fpvcg_init();
-    rzg2l_lcdc_start();
+	rzg2l_du_init();
+	rzg2l_vcpd_init();
+	rzg2l_fpvcg_init();
+	rzg2l_lcdc_start();
 
-    return 0;
+	return 0;
 }
 
 
@@ -330,9 +326,9 @@ static const uint32_t dpi_cpg_register_values_s1[][2] = {//0x11010000  //step1
     {0x11010598, 0x00010001},
 };
 
-static const uint32_t dpi_cpg_register_values_s2[][2] = {//0x11010000 //step2
-    {0x1101086C, 0x00010001},/*CPG_RST_LCDC*/
-    {0x11010BE8, 0x00010001},/*CPG_OTHERFUNC1_REG*/
+static const uint32_t dpi_cpg_reg_init[][2] = {
+    {CPG_base_addr + CPG_RST_LCDC, UNIT0_RST_WEN | UNIT0_RST_STOP},
+    {CPG_base_addr + CPG_OTHERFUNC1_REG, RES0_ON_W_EN | RES0_SET},
 };
 
 static const uint32_t fcpvd_register_values[][2] = {
@@ -343,20 +339,112 @@ static const uint32_t fcpvd_register_values[][2] = {
     // {0x10880018,0x00000000},
 };
 
+#define CPG_PL1_DDIV		0x0200
+
+#define CPG_PL5_SDIV		0x0420
+#define DIV_DSI_B_EN		(1 << 24)
+#define DIV_DSI_A_EN		(1 << 16)
+#define DIVDSIA_SET 		(2 << 0)
+#define DIVDSIB_SET 		(1 << 8)
+
+#define CPG_PL2_DDIV		0x0204
+/* 0: Writing is disabled. 1: Writing is enabled. */
+#define DIV_DSI_LPCLK_WEN	(1 << 28)
+
+/* PLL5 (SSCG) Output Clock Setting Register 1 */
+#define CPG_SIPLL5_CLK1		0x0144
+#define POSTDIV1(n)			(n << 0)
+#define POSTDIV2(n)			(n << 4)
+#define REFDIV(n)			(n << 8)
+
+#define CPG_SIPLL5_CLK2		0x0148
+#define FOUTVCOPD_WEN(n)		(n << 24)
+#define FOUTVCOPD(n)			(n << 8)
+
+#define CPG_SIPLL5_CLK3		0x014C
+#define FRACIN(n) 			(n << 8)
+#define DIVVAL(n) 			(n << 0)
+
+#define CPG_SIPLL5_CLK4		0x0150
+#define INTIN(n)			(n << 16)
+
+#define CPG_SIPLL5_CLK5		0x0154
+#define SPREAD(n)			(n << 0)
+
+#define CPG_SIPLL5_STBY		0x0140
+#define RESETB				(1 << 0)
+#define DOWNSPREAD			(1 << 4)
+#define RESETB_WEN			(1 << 16)
+#define SSCG_EN_WEN			(1 << 18)
+#define DOWNSPRE_AD_WREN		(1 << 20)
+
+
+#define CPG_CLKON_MIPI_DSI	0x0568
+#define DSI_PLLCLK_ON		(1 << 0)
+#define DSI_SYSCLK_ON		(1 << 1)
+#define DSI_ACLK_ON		(1 << 2)
+#define DSI_PCLK_ON		(1 << 3)
+#define DSI_VCLK_ON		(1 << 4)
+#define DSI_LPCLK_ON		(1 << 5)
+
+#define DSI_PLLCLK_ONEN	(1 << 16)
+#define DSI_SYSCLK_ONEN	(1 << 17)
+#define DSI_ACLK_ONEN		(1 << 18)
+#define DSI_PCLK_ONEN		(1 << 19)
+#define DSI_VCLK_ONEN		(1 << 20)
+#define DSI_LPCLK_ONEN		(1 << 21)
+
+#define CLK_EN (CLK0_ON | CLK1_ON | CLK2_ON | CLK3_ON | CLK4_ON | CLK5_ON)
+#define CLK_ONEN (CLK0_ONWEN | CLK1_ONWEN | CLK2_ONWEN | CLK3_ONWEN |
+CLK4_ONWEN | CLK5_ONWEN)
+
+#define CPG_CLKON_LCDC		0x056C
+#define CLK0_ON		(1 << 0)
+#define CLK1_ON		(1 << 1)
+#define CLK0_ONWEN		(1 << 16)
+#define CLK1_ONWEN		(1 << 17)
+
+#define CPG_CLKON_I2C		0x0580
+#define I2C0_PCLK_ON 		(1 << 0)
+#define I2C1_PCLK_ON 		(1 << 1)
+#define I2C2_PCLK_ON 		(1 << 2)
+#define I2C3_PCLK_ON 		(1 << 3) 
+#define I2C0_PCLK_ONWEN 	(1 << 16)
+#define I2C1_PCLK_ONWEN 	(1 << 17)
+#define I2C2_PCLK_ONWEN 	(1 << 18)
+#define I2C3_PCLK_ONWEN 	(1 << 19)
+#define I2C_CLK_ON			(I2C0_PCLK_ON | I2C1_PCLK_ON | I2C2_PCLK_ON |
+							I2C3_PCLK_ON)
+
+#define I2C_CLK_ONWEN		(I2C0_PCLK_ONWEN | I2C1_PCLK_ONWEN |
+							I2C2_PCLK_ONWEN | I2C3_PCLK_ONWEN)
+
 #ifdef DSI_PANEL
-static const uint32_t cpg_register_values[][2] = {//0x11010000  //step1
-//	{0x11010200, 0x10000000},//CPG_PL1_DDIV
-    {0x11010204, 0x10000000 | (CPG_LPCLK_DIV<<12)},//CPG_PL2_DDIV
-    {0x11010420, 0x01010000 | (CPG_DSI_DIV_A<<0) | (CPG_DSI_DIV_B << 8)},//CPG_PL5_SDIV
-    {0x11010144, 0x01110000 | (CPG_PL5_POSTDIV1<<0) | (CPG_PL5_POSTDIV2<<4) | (CPG_PL5_REFDIV<<8)},//CPG_SIPLL5_CLK1
-//	{0x11010148, 0x01000100},//CPG_SIPLL5_CLK2
-    {0x1101014c, (CPG_PL5_DIVVAL<<0) | (CPG_PL5_FRACIN<<8)},//CPG_SIPLL5_CLK3
-    {0x11010150, 0x000000ff | (CPG_PL5_INTIN<<16)},//CPG_SIPLL5_CLK4
-    {0x11010154, (CPG_PL5_SPREAD<<0)},//CPG_SIPLL5_CLK5
-    {0x11010140, 0x00150011},//CPG_SIPLL5_STBY
-    {0x11010568, 0x003f003f},/*DSI clock enable: CPG_CLKON_MIPI_DSI*/
-    {0x1101056c, 0x00030003},/*CPG_CLKON_LCDC*/
-    {0x11010580, 0x000f000f},/*CPG_CLKON_I2C*/
+
+/* step2 */
+static const uint32_t cpg_register_values[][2] = {
+ /* {CPG_base_addr + CPG_PL1_DDIV, 0x10000000},*/
+
+ {CPG_base_addr + CPG_PL2_DDIV, DIV_DSI_LPCLK_WEN | DIV_DSI_LPCLK_SET},
+
+ {CPG_base_addr + CPG_PL5_SDIV, DIV_DSI_A_EN | DIV_DSI_B_EN |
+								DIVDSIA_SET  | DIVDSIB_SET},
+
+ {CPG_base_addr + CPG_SIPLL5_CLK1, POSTDIV1(CPG_PL5_POSTDIV1) |
+								   POSTDIV2(CPG_PL5_POSTDIV2) |
+								   REFDIV(CPG_PL5_REFDIV)},
+
+ /* {CPG_base_addr + CPG_SIPLL5_CLK2, FOUTVCOPD_WEN(1) | FOUTVCOPD(1)},*/
+
+ {CPG_base_addr + CPG_SIPLL5_CLK3, DIVVAL(CPG_PL5_DIVVAL) | FRACIN(CPG_PL5_FRACIN)},
+ {CPG_base_addr + CPG_SIPLL5_CLK4, INTIN(CPG_PL5_INTIN)},
+ {CPG_base_addr + CPG_SIPLL5_CLK5, SPREAD(CPG_PL5_SPREAD)},
+ {CPG_base_addr + CPG_SIPLL5_STBY, RESETB | DOWNSPREAD |
+								   RESETB_WEN | SSCG_EN_WEN | DOWNSPRE_AD_WREN},
+ {CPG_base_addr + CPG_CLKON_MIPI_DSI, CLK_ONEN | CLK_ON},
+ {CPG_base_addr + CPG_CLKON_LCDC, CLK1_ONWEN | CLK0_ONWEN | CL1_ON | CL0_ON},
+
+ {CPG_base_addr + CPG_CLKON_I2C, I2C_CLK_ON | I2C_CLK_ONWEN},
 };
 
 static const uint32_t cpg_register_values1[][2] = {//0x11010000 //step2
@@ -645,22 +733,29 @@ static void rzg2l_dpi_pin_init(void)
 
 static void rzg2l_dpi_cpg_init(void)
 {
-    printf("%s: start\r\n", __func__);
-    rzg2l_registers_set(dpi_cpg_register_values_s1,ARRAY_SIZE(dpi_cpg_register_values_s1));
+	uint32_t clk_mon, clk_mon_lcd, rst_mon_led;
 
-    // wait clock on
-    while ((reg_read(CPG_base_addr + 0x06EC) & 0x00000003) != 0x00000003); // CPG_CLKMON_LCDC
+	printf("%s: start\r\n", __func__);
+	clk_mon = CLK1_MON_CLK_SUPPLIED | CLK0_MON_CLK_SUPPLIED;
+	rzg2l_registers_set(dpi_cpg_register_values_s1,
+	ARRAY_SIZE(dpi_cpg_register_values_s1));
 
-    rzg2l_registers_set(dpi_cpg_register_values_s2,ARRAY_SIZE(dpi_cpg_register_values_s2));
+	/* CPG_CLKMON_LCDC, wait clock on */
+	clk_mon_lcd = reg_read(CPG_base_addr + CPG_CLKMON_LCDC) & clk_mon;
+	while (clk_mon_lcd != clk_mon);
 
-    // wait reset on
-    while ((reg_read(CPG_base_addr + 0x09EC) & 0x00000001) != 0x00000000); // CPG_RSTMON_LCDC
+	/* LCD reset & SSCG CLK */
+	rzg2l_registers_set(dpi_cpg_reg_init, ARRAY_SIZE(dpi_cpg_reg_init));
+
+	/* wait reset on */
+	rst_mon_led = (reg_read(CPG_base_addr + CPG_RSTMON_LCDC) & RST0_MON);
+	while (rst_mon_led & RST0_MON);
 }
 #ifdef DSI_PANEL
 /* Init MIPI CPG & LCDC CPG */
 static void rzg2l_cpg_init(void)
 {
-    rzg2l_registers_set(cpg_register_values,ARRAY_SIZE(cpg_register_values));
+    rzg2l_registers_set(cpg_register_values, ARRAY_SIZE(cpg_register_values));
 
     // wait clock on
     while ((reg_read(CPG_base_addr + 0x06E8) & 0x0000003F) != 0x0000003F); // CPG_CLKMON_MIPI_DSI
