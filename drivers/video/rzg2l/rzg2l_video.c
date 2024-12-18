@@ -14,7 +14,7 @@
 
 /* PFC寄存器偏移定义 */
 #define PMC(off)    (0x0200 + (off))      // 端口模式控制
-#define PFC(off)    (0x0400 + (off) * 4)  // 端口功能控制  
+#define PFC(off)    (0x0400 + (off) * 4)  // 端口功能控制
 #define PWPR        (0x3014)              // 端口写保护寄存器
 #define PWPR_G3S    (0x3000)
 #define IOLH(off)   (0x1000 + (off) * 8)  // IO电平控制
@@ -89,7 +89,7 @@ static void rzg2l_dpi_cpg_init(void);
 
 #define FB_ADDR	LCD_SRCM_ADDR
 
-volatile uint32_t   *g_framebuffer = (volatile uint32_t *)FB_ADDR; 
+volatile uint32_t   *g_framebuffer = (volatile uint32_t *)FB_ADDR;
 
 /***********************************************************************************************************************
  * GPIO API definitions
@@ -156,7 +156,7 @@ static void rzg2l_set_gpio(
     printf("Setting GPIO: port=%d, pin=%d, func=%d\n", off, pin, func);
 
     if(set_strangth != 0){
-        rzg2l_set_iohl(off, pin, set_strangth); 
+        rzg2l_set_iohl(off, pin, set_strangth);
     }
 
     rzg2l_set_sr(off, pin, 1);
@@ -327,7 +327,7 @@ static const uint32_t dpi_cpg_register_values_s1[][2] = {//0x11010000  //step1
     {0x11010154, (CPG_PL5_INTIN << 16)},                                                                  // CPG_SIPLL5_CLK5
     {0x11010140, 0x00150011},                                                                             // CPG_SIPLL5_STBY
     {0x1101056c, 0x00030003},                                                                             // CPG_CLKON_LCDC
-    {0x11010598, 0x00010001},  
+    {0x11010598, 0x00010001},
 };
 
 static const uint32_t dpi_cpg_register_values_s2[][2] = {//0x11010000 //step2
@@ -597,43 +597,43 @@ static void rzg2l_dpi_pin_init(void)
     int ret;
     printf("%s: start\r\n", __func__);
 
-	// Set LCD PW, BL PIN as output 
-    rzg2l_set_gpio(10 + 0x3, 1, 0,2);
-    rzg2l_set_gpio(10 + 0x4, 1, 0,2);
-    rzg2l_set_gpio(10 + 0x41, 1, 0,2);
-    rzg2l_set_gpio(10 + 0x45, 2, 0,2);
+	// Set LCD PW, BL PIN as output
+    rzg2l_set_gpio(0x10 + 3, 1, 0,2);
+    rzg2l_set_gpio(0x10 + 4, 1, 0,2);
+    rzg2l_set_gpio(0x10 + 41, 1, 0,2);
+    rzg2l_set_gpio(0x10 + 45, 2, 0,2);
 
 #if 1
-    rzg2l_set_gpio(10 + 0x7, 2, 1,2);
-    rzg2l_set_gpio(10 + 0x8, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x8, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x8, 2, 1,2);
-    rzg2l_set_gpio(10 + 0x9, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x9, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x10, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x10, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x11, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x11, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x12, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x12, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x13, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x13, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x13, 2, 1,2);
-    rzg2l_set_gpio(10 + 0x14, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x14, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x15, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x15, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x16, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x16, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x17, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x17, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x17, 2, 1,2);
-#endif  
-    rzg2l_set_gpio(10 + 0x6, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x7, 0, 1,2);
-    rzg2l_set_gpio(10 + 0x7, 1, 1,2);
-    rzg2l_set_gpio(10 + 0x6, 0, 1,0);
-	
+    rzg2l_set_gpio(0x10 + 7, 2, 1,2);
+    rzg2l_set_gpio(0x10 + 8, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 8, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 8, 2, 1,2);
+    rzg2l_set_gpio(0x10 + 9, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 9, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 10, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 10, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 11, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 11, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 12, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 12, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 13, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 13, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 13, 2, 1,2);
+    rzg2l_set_gpio(0x10 + 14, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 14, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 15, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 15, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 16, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 16, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 17, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 17, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 17, 2, 1,2);
+#endif
+    rzg2l_set_gpio(0x10 + 6, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 7, 0, 1,2);
+    rzg2l_set_gpio(0x10 + 7, 1, 1,2);
+    rzg2l_set_gpio(0x10 + 6, 0, 1,0);
+
 	// LCD PW, BL ON
     ret = run_command("gpio set 7",0);
     ret = run_command("gpio set 9",0);
