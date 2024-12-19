@@ -339,21 +339,57 @@ static const uint32_t fcpvd_register_values[][2] = {
     // {0x10880018,0x00000000},
 };
 
-#define CPG_PL1_DDIV 0x200
+#define CPG_PL1_DDIV		0x0200
+#define CPG_PL5_SDIV		0x0420
+
+#define CPG_PL2_DDIV		0x0204
+/* 0: Writing is disabled. 1: Writing is enabled. */
+#define DIV_DSI_LPCLK_WEN	(1 << 28)
+
+#define CPG_SIPLL5_CLK1		0x0144
+#define CPG_SIPLL5_CLK2		0x0148
+#define CPG_SIPLL5_CLK3		0x014C
+#define CPG_SIPLL5_CLK4		0x0150
+#define CPG_SIPLL5_CLK5		0x0154
+#define CPG_SIPLL5_STBY		0x0140
+#define CPG_CLKON_MIPI_DSI	0x0568
+#define CPG_CLKON_LCDC		0x056C
+#define CPG_CLKON_I2C		0x0580
+
 #ifdef DSI_PANEL
+
+/* step2 */
 static const uint32_t cpg_register_values[][2] = {
-/*  {CPG_base_addr + CPG_PL1_DDIV, 0x10000000},*/ //CPG_PL1_DDIV
-    {0x11010204, 0x10000000 | (CPG_LPCLK_DIV << 12)},//CPG_PL2_DDIV
-    {0x11010420, 0x01010000 | (CPG_DSI_DIV_A<<0) | (CPG_DSI_DIV_B << 8)},//CPG_PL5_SDIV
-    {0x11010144, 0x01110000 | (CPG_PL5_POSTDIV1<<0) | (CPG_PL5_POSTDIV2<<4) | (CPG_PL5_REFDIV<<8)},//CPG_SIPLL5_CLK1
-/*  {0x11010148, 0x01000100},*/ //CPG_SIPLL5_CLK2
-    {0x1101014c, (CPG_PL5_DIVVAL<<0) | (CPG_PL5_FRACIN<<8)},//CPG_SIPLL5_CLK3
-    {0x11010150, 0x000000ff | (CPG_PL5_INTIN<<16)},//CPG_SIPLL5_CLK4
-    {0x11010154, (CPG_PL5_SPREAD<<0)},//CPG_SIPLL5_CLK5
-    {0x11010140, 0x00150011},//CPG_SIPLL5_STBY
-    {0x11010568, 0x003f003f},/*DSI clock enable: CPG_CLKON_MIPI_DSI*/
-    {0x1101056c, 0x00030003},/*CPG_CLKON_LCDC*/
-    {0x11010580, 0x000f000f},/*CPG_CLKON_I2C*/
+ /* {CPG_base_addr + CPG_PL1_DDIV, 0x10000000},*/
+
+ {CPG_base_addr + CPG_PL2_DDIV, DIV_DSI_LPCLK_WEN | DIV_DSI_LPCLK_SET},
+
+ {CPG_base_addr + CPG_PL5_SDIV, 0x01010000 |
+				(CPG_DSI_DIV_A << 0) |
+				(CPG_DSI_DIV_B << 8)},
+
+ {CPG_base_addr + CPG_SIPLL5_CLK1, 0x01110000 |
+				   (CPG_PL5_POSTDIV1 << 0) |
+				   (CPG_PL5_POSTDIV2 << 4) |
+				   (CPG_PL5_REFDIV << 8)},
+
+ /* {CPG_base_addr + CPG_SIPLL5_CLK2, 0x01000100},*/
+
+ {CPG_base_addr + CPG_SIPLL5_CLK3, (CPG_PL5_DIVVAL << 0) |
+				   (CPG_PL5_FRACIN << 8)},
+
+ {CPG_base_addr + CPG_SIPLL5_CLK4, 0x000000ff |
+				   (CPG_PL5_INTIN << 16)},
+
+ {CPG_base_addr + CPG_SIPLL5_CLK5, (CPG_PL5_SPREAD << 0)},
+
+ {CPG_base_addr + CPG_SIPLL5_STBY, 0x00150011},
+
+ {CPG_base_addr + CPG_CLKON_MIPI_DSI, 0x003f003f},
+
+ {CPG_base_addr + CPG_CLKON_LCDC, 0x00030003},
+
+ {CPG_base_addr + CPG_CLKON_I2C, 0x000f000f},
 };
 
 static const uint32_t cpg_register_values1[][2] = {//0x11010000 //step2

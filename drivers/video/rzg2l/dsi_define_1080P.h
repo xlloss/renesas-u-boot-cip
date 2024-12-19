@@ -1,7 +1,14 @@
 #ifndef __DSI_DEFINE__
 #define __DSI_DEFINE__
 
-#define CPG_LPCLK_DIV       0
+/* Link/Phy CLK */
+/*
+ 00b: 1/16  (16.656 MHz)
+ 01b: 1/32  (8.328  MHz)
+ 10b: 1/64  (4.164  MHz)
+ 11b: 1/128 (2.082  MHz)
+ */
+#define DIV_DSI_LPCLK_SET   (0 << 12)
 
 /* 1080p 148.5MHz */
 #define CPG_PL5_REFDIV      2
