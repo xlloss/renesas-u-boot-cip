@@ -43,7 +43,7 @@ typedef struct
 #define COMPUTE_Y(index,width,height) (((LCD_VACTIVE)-(height))/2+(height)-i/3/(width))
 
 #ifdef DSI_PANEL
-static void rzg2l_cpg_init(void);
+static void rzg2l_cpg_dsi_rst_init(void);
 static void adv7535_init(void);
 static void adv7535_deinit(void);
 static void rzg2l_dsi_phy_init(void);
@@ -59,8 +59,8 @@ static void rzg2l_lcdc_stop(void);
 static void rzg2l_dpi_pin_init(void);
 static void rzg2l_dpi_cpg_init(void);
 
-
-#define DISPLAY_BITS_PER_PIXEL_INPUT0 (24)
+/* BITS_PER_PIXEL */
+#define DISPLAY_BPP_INPUT0 (24)
 
 
 // DU timing parameters for 480x272@60Hz (根据数据表调整)
@@ -98,7 +98,7 @@ volatile uint32_t   *g_framebuffer = (volatile uint32_t *)FB_ADDR;
 static void rzg2l_set_iohl( u32 off,
                  u8 pin, u8 strangth)
 {
-    void __iomem *addr = 0x11030000 + IOLH(off);
+    void __iomem *addr = RZG2L_GPIO_BASE + IOLH(off);
     unsigned long flags;
     u32 reg;
 
@@ -115,7 +115,7 @@ static void rzg2l_set_iohl( u32 off,
 static void rzg2l_set_sr( u32 off,
                  u8 pin, u8 mode)
 {
-    void __iomem *addr = 0x11030000 + SR(off);
+    void __iomem *addr = RZG2L_GPIO_BASE + SR(off);
     unsigned long flags;
     u32 reg;
 
@@ -133,7 +133,7 @@ static void rzg2l_set_sr( u32 off,
 static void rzg2l_set_pupd( u32 off,
                  u8 pin, u8 mode)
 {
-    void __iomem *addr = 0x11030000 + PUPD(off);
+    void __iomem *addr = RZG2L_GPIO_BASE + PUPD(off);
     unsigned long flags;
     u32 reg;
 
@@ -148,77 +148,77 @@ static void rzg2l_set_pupd( u32 off,
 }
 
 
-static void rzg2l_set_gpio(
-    u8 off, u8 pin, u8 func, u8 set_strangth)
+static void rzg2l_set_gpio(u8 off, u8 pin, u8 func, u8 set_strangth)
 {
     u32 reg;
 
     printf("Setting GPIO: port=%d, pin=%d, func=%d\n", off, pin, func);
 
-    if(set_strangth != 0){
+    if (set_strangth != 0)
         rzg2l_set_iohl(off, pin, set_strangth);
-    }
 
     rzg2l_set_sr(off, pin, 1);
 
     /* Set pin to 'Non-use (Hi-Z input protection)'  */
-    reg = readw(0x11030000 + PM(off));
+    reg = readw(RZG2L_GPIO_BASE + PM(off));
     reg &= ~(PM_MASK << (pin * 2));
-    writew(reg, 0x11030000 + PM(off));
+    writew(reg, RZG2L_GPIO_BASE + PM(off));
 
     /* Temporarily switch to GPIO mode with PMC register */
-    reg = readb(0x11030000 + PMC(off));
-    writeb(reg & ~BIT(pin), 0x11030000 + PMC(off));
+    reg = readb(RZG2L_GPIO_BASE + PMC(off));
+    writeb(reg & ~BIT(pin), RZG2L_GPIO_BASE + PMC(off));
 
     /* Set the PWPR register to allow PFC register to write */
-    writel(0x0, 0x11030000 + PWPR);     /* B0WI=0, PFCWE=0 */
-    writel(PWPR_PFCWE,0x11030000 + PWPR);   /* B0WI=0, PFCWE=1 */
+    writel(0x0, RZG2L_GPIO_BASE + PWPR);                /* B0WI=0, PFCWE=0 */
+    writel(PWPR_PFCWE,RZG2L_GPIO_BASE + PWPR);          /* B0WI=0, PFCWE=1 */
 
     /* Select Pin function mode with PFC register */
-    reg = readl(0x11030000 + PFC(off));
+    reg = readl(RZG2L_GPIO_BASE + PFC(off));
     reg &= ~(PFC_MASK << (pin * 4));
-    writel(reg | (func << (pin * 4)), 0x11030000 + PFC(off));
+    writel(reg | (func << (pin * 4)), RZG2L_GPIO_BASE + PFC(off));
 
     /* Set the PWPR register to be write-protected */
-    writel(0x0, 0x11030000 + PWPR);     /* B0WI=0, PFCWE=0 */
-    writel(PWPR_B0WI, 0x11030000 + PWPR);   /* B0WI=1, PFCWE=0 */
+    writel(0x0, RZG2L_GPIO_BASE + PWPR);                /* B0WI=0, PFCWE=0 */
+    writel(PWPR_B0WI, RZG2L_GPIO_BASE + PWPR);          /* B0WI=1, PFCWE=0 */
 
     /* Switch to Peripheral pin function with PMC register */
-    reg = readb(0x11030000 + PMC(off));
-    writeb(reg | BIT(pin), 0x11030000 + PMC(off));
+    reg = readb(RZG2L_GPIO_BASE + PMC(off));
+    writeb(reg | BIT(pin), RZG2L_GPIO_BASE + PMC(off));
 }
 
 static void set_white_screen_display(uint32_t   *framebuffer, uint8_t color)
 {
-	printf("%s: start\r\n", __func__);
-	uint32_t	size = LCD_HACTIVE * LCD_VACTIVE * (DISPLAY_BITS_PER_PIXEL_INPUT0 >> 3);
-	dcache_disable();
-	printf("%s: start: framebuffer[Addr:%8X] set to %x\r\n", __func__, framebuffer, color);
-	memset( framebuffer, color, size);
-	dcache_enable();
+        uint32_t size = LCD_HACTIVE * LCD_VACTIVE * (DISPLAY_BPP_INPUT0 >> 3);
+
+        printf("%s: start\r\n", __func__);
+        dcache_disable();
+        printf("%s: start: framebuffer[Addr:%8X] set to %x\r\n",
+                __func__, framebuffer, color);
+        memset( framebuffer, color, size);
+        dcache_enable();
 }
 
 int rzg2l_video_init(void)
 {
-	printf("%s: start\r\n", __func__);
-	/* adv7535_deinit(); */
-	/* rzg2l_cpg_init(); */
+        printf("%s: start\r\n", __func__);
+        /* adv7535_deinit(); */
+        /* rzg2l_cpg_dsi_rst_init(); */
 
-	/* Pinmux setup for DPI panel */
-	rzg2l_dpi_pin_init();
+        /* Pinmux setup for DPI panel */
+        rzg2l_dpi_pin_init();
 
-	/* CPG setup for DPI panel */
-	rzg2l_dpi_cpg_init();
+        /* CPG setup for DPI panel */
+        rzg2l_dpi_cpg_init();
 
-	/* Initialize display buffer */
-	set_white_screen_display(g_framebuffer, 0xff);
+        /* Initialize display buffer */
+        set_white_screen_display(g_framebuffer, 0xff);
 
-	rzg2l_du_init();
-	rzg2l_vcpd_init();
-	rzg2l_fpvcg_init();
-	rzg2l_lcdc_start();
+        rzg2l_du_init();
+        rzg2l_vcpd_init();
+        rzg2l_fpvcg_init();
+        rzg2l_lcdc_start();
 
-	return 0;
+        return 0;
 }
 
 
@@ -293,42 +293,33 @@ static const uint32_t dpi_pin_register_values[][2] = { //0x11030000
 
 // 为480x272@60Hz配置PLL5
 // 目标像素时钟为9MHz (根据数据表)
-#define CPG_PL5_REFDIV      2
-#define CPG_PL5_INTIN       37      // 修改PLL5倍频系数
-#define CPG_PL5_FRACIN      4404019 // 修改PLL5小数部分
-#define CPG_PL5_POSTDIV1    8
-#define CPG_PL5_POSTDIV2    1
-#define CPG_PL5_DIVVAL      0
-#define CPG_PL5_SPREAD      0x16
+#define PL5_REFDIV      2
+#define PL5_INTIN       37      // 修改PLL5倍频系数
+#define PL5_FRACIN      4404019 // 修改PLL5小数部分
+#define PL5_POSTDIV1    8
+#define PL5_POSTDIV2    1
+#define PL5_DIVVAL      0
+#define PL5_SPREAD      0x16
 
 // vclk1 = 113.3 MHz / 12 = 9.44 MHz
 #define CPG_DSI_DIV_A       2
 #define CPG_DSI_DIV_B       1
 
 
-static const uint32_t dpi_cpg_register_values_s1[][2] = {//0x11010000  //step1
-#if 0
-    {0x11010420, 0x01010500},//CPG_PL5_SDIV
-    {0x11010144, 0x00000142},//CPG_SIPLL5_CLK1
-    {0x1101014c, 0x00000000},//CPG_SIPLL5_CLK3
-    {0x11010150, 0x002400FF},//CPG_SIPLL5_CLK4
-    {0x11010154, 0x00000000},//CPG_SIPLL5_CLK5
-    {0x11010140, 0x00150001},//CPG_SIPLL5_STBY
-    {0x1101056c, 0x00030003},/*CPG_CLKON_LCDC*/
-#endif
-    {0x1101014c, (CPG_PL5_DIVVAL << 0) | (CPG_PL5_FRACIN << 8)}, // CPG_SIPLL5_CLK3
-    {0x11010150, 0x000000ff | (CPG_PL5_INTIN << 16)},                                                     // CPG_SIPLL5_CLK4
-    {0x11010144, 0x01110000 | (CPG_PL5_POSTDIV1 << 0) | (CPG_PL5_POSTDIV2 << 4) | (CPG_PL5_REFDIV << 8)}, // CPG_SIPLL5_CLK1
-    {0x11010420, 0x01010000 | (CPG_DSI_DIV_A << 0) | (CPG_DSI_DIV_B << 8)},                               // CPG_PL5_SDIV
-    {0x11010154, (CPG_PL5_INTIN << 16)},                                                                  // CPG_SIPLL5_CLK5
+static const uint32_t cpg_dpi_reg_init[][2] = {//0x11010000  //step1
+    {0x1101014c, (PL5_DIVVAL << 0) | (PL5_FRACIN << 8)}, // CPG_SIPLL5_CLK3
+    {0x11010150, 0x000000ff | (PL5_INTIN << 16)},                                                     // CPG_SIPLL5_CLK4
+    {0x11010144, 0x01110000 | (PL5_POSTDIV1 << 0) | (PL5_POSTDIV2 << 4) | (PL5_REFDIV << 8)}, // CPG_SIPLL5_CLK1
+    {0x11010420, 0x01010000 | (DSI_DIV_A << 0) | (DSI_DIV_B << 8)},                               // CPG_PL5_SDIV
+    {0x11010154, (PL5_INTIN << 16)},                                                                  // CPG_SIPLL5_CLK5
     {0x11010140, 0x00150011},                                                                             // CPG_SIPLL5_STBY
     {0x1101056c, 0x00030003},                                                                             // CPG_CLKON_LCDC
     {0x11010598, 0x00010001},
 };
 
-static const uint32_t dpi_cpg_reg_init[][2] = {
-    {CPG_base_addr + CPG_RST_LCDC, UNIT0_RST_WEN | UNIT0_RST_STOP},
-    {CPG_base_addr + CPG_OTHERFUNC1_REG, RES0_ON_W_EN | RES0_SET},
+static const uint32_t cpg_dpi_rst_init[][2] = {
+    {RZG2L_CPG_BASE + CPG_RST_LCDC, UNIT0_RST_WEN | UNIT0_RST_STOP},
+    {RZG2L_CPG_BASE + CPG_OTHERFUNC1_REG, RES0_ON_W_EN | RES0_SET},
 };
 
 static const uint32_t fcpvd_register_values[][2] = {
@@ -339,119 +330,37 @@ static const uint32_t fcpvd_register_values[][2] = {
     // {0x10880018,0x00000000},
 };
 
-#define CPG_PL1_DDIV		0x0200
-
-#define CPG_PL5_SDIV		0x0420
-#define DIV_DSI_B_EN		(1 << 24)
-#define DIV_DSI_A_EN		(1 << 16)
-#define DIVDSIA_SET 		(2 << 0)
-#define DIVDSIB_SET 		(1 << 8)
-
-#define CPG_PL2_DDIV		0x0204
-/* 0: Writing is disabled. 1: Writing is enabled. */
-#define DIV_DSI_LPCLK_WEN	(1 << 28)
-
-/* PLL5 (SSCG) Output Clock Setting Register 1 */
-#define CPG_SIPLL5_CLK1		0x0144
-#define POSTDIV1(n)			(n << 0)
-#define POSTDIV2(n)			(n << 4)
-#define REFDIV(n)			(n << 8)
-
-#define CPG_SIPLL5_CLK2		0x0148
-#define FOUTVCOPD_WEN(n)		(n << 24)
-#define FOUTVCOPD(n)			(n << 8)
-
-#define CPG_SIPLL5_CLK3		0x014C
-#define FRACIN(n) 			(n << 8)
-#define DIVVAL(n) 			(n << 0)
-
-#define CPG_SIPLL5_CLK4		0x0150
-#define INTIN(n)			(n << 16)
-
-#define CPG_SIPLL5_CLK5		0x0154
-#define SPREAD(n)			(n << 0)
-
-#define CPG_SIPLL5_STBY		0x0140
-#define RESETB				(1 << 0)
-#define DOWNSPREAD			(1 << 4)
-#define RESETB_WEN			(1 << 16)
-#define SSCG_EN_WEN			(1 << 18)
-#define DOWNSPRE_AD_WREN		(1 << 20)
-
-
-#define CPG_CLKON_MIPI_DSI	0x0568
-#define DSI_PLLCLK_ON		(1 << 0)
-#define DSI_SYSCLK_ON		(1 << 1)
-#define DSI_ACLK_ON		(1 << 2)
-#define DSI_PCLK_ON		(1 << 3)
-#define DSI_VCLK_ON		(1 << 4)
-#define DSI_LPCLK_ON		(1 << 5)
-
-#define DSI_PLLCLK_ONEN	(1 << 16)
-#define DSI_SYSCLK_ONEN	(1 << 17)
-#define DSI_ACLK_ONEN		(1 << 18)
-#define DSI_PCLK_ONEN		(1 << 19)
-#define DSI_VCLK_ONEN		(1 << 20)
-#define DSI_LPCLK_ONEN		(1 << 21)
-
-#define CLK_EN (CLK0_ON | CLK1_ON | CLK2_ON | CLK3_ON | CLK4_ON | CLK5_ON)
-#define CLK_ONEN (CLK0_ONWEN | CLK1_ONWEN | CLK2_ONWEN | CLK3_ONWEN |
-CLK4_ONWEN | CLK5_ONWEN)
-
-#define CPG_CLKON_LCDC		0x056C
-#define CLK0_ON		(1 << 0)
-#define CLK1_ON		(1 << 1)
-#define CLK0_ONWEN		(1 << 16)
-#define CLK1_ONWEN		(1 << 17)
-
-#define CPG_CLKON_I2C		0x0580
-#define I2C0_PCLK_ON 		(1 << 0)
-#define I2C1_PCLK_ON 		(1 << 1)
-#define I2C2_PCLK_ON 		(1 << 2)
-#define I2C3_PCLK_ON 		(1 << 3) 
-#define I2C0_PCLK_ONWEN 	(1 << 16)
-#define I2C1_PCLK_ONWEN 	(1 << 17)
-#define I2C2_PCLK_ONWEN 	(1 << 18)
-#define I2C3_PCLK_ONWEN 	(1 << 19)
-#define I2C_CLK_ON			(I2C0_PCLK_ON | I2C1_PCLK_ON | I2C2_PCLK_ON |
-							I2C3_PCLK_ON)
-
-#define I2C_CLK_ONWEN		(I2C0_PCLK_ONWEN | I2C1_PCLK_ONWEN |
-							I2C2_PCLK_ONWEN | I2C3_PCLK_ONWEN)
-
 #ifdef DSI_PANEL
 
 /* step2 */
-static const uint32_t cpg_register_values[][2] = {
- /* {CPG_base_addr + CPG_PL1_DDIV, 0x10000000},*/
+static const uint32_t cpg_dsi_init[][2] = {
+ /* {RZG2L_CPG_BASE + CPG_PL1_DDIV, 0x10000000},*/
 
- {CPG_base_addr + CPG_PL2_DDIV, DIV_DSI_LPCLK_WEN | DIV_DSI_LPCLK_SET},
+ {RZG2L_CPG_BASE + CPG_PL2_DDIV, DIV_DSI_LPCLK_SET},
+ {RZG2L_CPG_BASE + CPG_PL5_SDIV, DSI_CLK_DIVA_VAL(1) | DSI_CLK_DIVB_VAL(1)},
+ {RZG2L_CPG_BASE + CPG_SIPLL5_CLK1, POSTDIV1(PL5_POSTDIV1) |
+				POSTDIV2(PL5_POSTDIV2) | REFDIV(PL5_REFDIV)},
 
- {CPG_base_addr + CPG_PL5_SDIV, DIV_DSI_A_EN | DIV_DSI_B_EN |
-								DIVDSIA_SET  | DIVDSIB_SET},
+ /* {RZG2L_CPG_BASE + CPG_SIPLL5_CLK2, FOUTVCOPD_WEN(1) | FOUTVCOPD(1)},*/
 
- {CPG_base_addr + CPG_SIPLL5_CLK1, POSTDIV1(CPG_PL5_POSTDIV1) |
-								   POSTDIV2(CPG_PL5_POSTDIV2) |
-								   REFDIV(CPG_PL5_REFDIV)},
-
- /* {CPG_base_addr + CPG_SIPLL5_CLK2, FOUTVCOPD_WEN(1) | FOUTVCOPD(1)},*/
-
- {CPG_base_addr + CPG_SIPLL5_CLK3, DIVVAL(CPG_PL5_DIVVAL) | FRACIN(CPG_PL5_FRACIN)},
- {CPG_base_addr + CPG_SIPLL5_CLK4, INTIN(CPG_PL5_INTIN)},
- {CPG_base_addr + CPG_SIPLL5_CLK5, SPREAD(CPG_PL5_SPREAD)},
- {CPG_base_addr + CPG_SIPLL5_STBY, RESETB | DOWNSPREAD |
-								   RESETB_WEN | SSCG_EN_WEN | DOWNSPRE_AD_WREN},
- {CPG_base_addr + CPG_CLKON_MIPI_DSI, CLK_ONEN | CLK_ON},
- {CPG_base_addr + CPG_CLKON_LCDC, CLK1_ONWEN | CLK0_ONWEN | CL1_ON | CL0_ON},
-
- {CPG_base_addr + CPG_CLKON_I2C, I2C_CLK_ON | I2C_CLK_ONWEN},
+ {RZG2L_CPG_BASE + CPG_SIPLL5_CLK3, DIVVAL(PL5_DIVVAL) | FRACIN(PL5_FRACIN)},
+ {RZG2L_CPG_BASE + CPG_SIPLL5_CLK4, INTIN(CPG_PL5_INTIN)},
+ {RZG2L_CPG_BASE + CPG_SIPLL5_CLK5, SPREAD(CPG_PL5_SPREAD)},
+ {RZG2L_CPG_BASE + CPG_SIPLL5_STBY, RESETB | DOWNSPREAD | SSCG_EN},
+ {RZG2L_CPG_BASE + CPG_CLKON_MIPI_DSI, CLK_ONEN | CLK_ON},
+ {RZG2L_CPG_BASE + CPG_CLKON_LCDC, CLK1_ONWEN | CLK0_ONWEN | CL1_ON | CL0_ON},
+ {RZG2L_CPG_BASE + CPG_CLKON_I2C, I2C_CLK_ON | I2C_CLK_ONWEN},
 };
+#define CPG_RST_MIPI_DSI        0x0868
+#define CPG_RST_LCDC            0x086C
+#define CPG_RST_I2C             0x0880
+#define CPG_OTHERFUNC1_REG      0x0BE8
 
-static const uint32_t cpg_register_values1[][2] = {//0x11010000 //step2
-    {0x11010868, 0x00060006},/*CPG_RST_MIPI_DSI*/
-    {0x1101086c, 0x00010001},/*CPG_RST_LCDC*/
-    {0x11010880, 0x000f000f},/*CPG_RST_I2C*/
-    {0x11010be8, 0x00010001},//CPG_OTHERFUNC1_REG
+static const uint32_t cpg_dsi_rst_init[][2] = {
+    {RZG2L_CPG_BASE + CPG_RST_MIPI_DSI, 0x00060006},
+    {RZG2L_CPG_BASE + CPG_RST_LCDC, 0x00010001},
+    {RZG2L_CPG_BASE + CPG_RST_I2C, 0x000f000f},
+    {RZG2L_CPG_BASE + CPG_OTHERFUNC1_REG, 0x00010001},
 };
 
 static const uint32_t dsi_phy_register_values[][2] = {//0x10850000
@@ -733,39 +642,39 @@ static void rzg2l_dpi_pin_init(void)
 
 static void rzg2l_dpi_cpg_init(void)
 {
-	uint32_t clk_mon, clk_mon_lcd, rst_mon_led;
+        uint32_t clk_mon, clk_mon_lcd, rst_mon_led;
 
-	printf("%s: start\r\n", __func__);
-	clk_mon = CLK1_MON_CLK_SUPPLIED | CLK0_MON_CLK_SUPPLIED;
-	rzg2l_registers_set(dpi_cpg_register_values_s1,
-	ARRAY_SIZE(dpi_cpg_register_values_s1));
+        printf("%s: start\r\n", __func__);
 
-	/* CPG_CLKMON_LCDC, wait clock on */
-	clk_mon_lcd = reg_read(CPG_base_addr + CPG_CLKMON_LCDC) & clk_mon;
-	while (clk_mon_lcd != clk_mon);
+        clk_mon = CLK1_MON_CLK_SUPPLIED | CLK0_MON_CLK_SUPPLIED;
+        rzg2l_registers_set(cpg_dpi_reg_init, ARRAY_SIZE(cpg_dpi_reg_init));
 
-	/* LCD reset & SSCG CLK */
-	rzg2l_registers_set(dpi_cpg_reg_init, ARRAY_SIZE(dpi_cpg_reg_init));
+        /* CPG_CLKMON_LCDC, wait clock on */
+        clk_mon_lcd = reg_read(RZG2L_CPG_BASE + CPG_CLKMON_LCDC) & clk_mon;
+        while (clk_mon_lcd != clk_mon);
 
-	/* wait reset on */
-	rst_mon_led = (reg_read(CPG_base_addr + CPG_RSTMON_LCDC) & RST0_MON);
-	while (rst_mon_led & RST0_MON);
+        /* LCD reset & SSCG CLK */
+        rzg2l_registers_set(cpg_dpi_rst_init, ARRAY_SIZE(cpg_dpi_rst_init));
+
+        /* wait reset on */
+        rst_mon_led = (reg_read(RZG2L_CPG_BASE + CPG_RSTMON_LCDC) & RST0_MON);
+        while (rst_mon_led & RST0_MON);
 }
 #ifdef DSI_PANEL
-/* Init MIPI CPG & LCDC CPG */
-static void rzg2l_cpg_init(void)
+
+static void rzg2l_cpg_dsi_rst_init(void)
 {
-    rzg2l_registers_set(cpg_register_values, ARRAY_SIZE(cpg_register_values));
+    rzg2l_registers_set(cpg_dsi_init, ARRAY_SIZE(cpg_dsi_init));
 
     // wait clock on
-    while ((reg_read(CPG_base_addr + 0x06E8) & 0x0000003F) != 0x0000003F); // CPG_CLKMON_MIPI_DSI
-    while ((reg_read(CPG_base_addr + 0x06EC) & 0x00000003) != 0x00000003); // CPG_CLKMON_LCDC
+    while ((reg_read(RZG2L_CPG_BASE + CPG_CLKMON_MIPI_DSI) & DSI_CLK_SUPPLY) != DSI_CLK_SUPPLY);
+    while ((reg_read(RZG2L_CPG_BASE + CPG_CLKMON_LCDC) & LCD_CLK_SUPPLY) != LCD_CLK_SUPPLY);
 
-    rzg2l_registers_set(cpg_register_values1,ARRAY_SIZE(cpg_register_values1));
+    rzg2l_registers_set(cpg_dsi_rst_init, ARRAY_SIZE(cpg_dsi_rst_init));
 
     // wait reset on
-    while ((reg_read(CPG_base_addr + 0x09E8) & 0x00000006) != 0x00000000); // CPG_RSTMON_MIPI_DSI: MIPI_DSI_ARESET_N=1, MIPI_DSI_PRESET_N=1
-    while ((reg_read(CPG_base_addr + 0x09EC) & 0x00000001) != 0x00000000); // CPG_RSTMON_LCDC
+    while ((reg_read(RZG2L_CPG_BASE + CPG_RSTMON_MIPI_DSI) & DSI_RST_SUPPLY));
+    while ((reg_read(RZG2L_CPG_BASE + CPG_RSTMON_LCDC) & LCD_RST_SUPPLY));
 }
 #endif
 #ifdef DSI_HDMI_BRIDGE
@@ -990,7 +899,7 @@ static void adv7535_deinit(void)
 static void rzg2l_dsi_phy_init(void)
 {
     rzg2l_registers_set(dsi_phy_register_values,ARRAY_SIZE(dsi_phy_register_values));
-    while ((reg_read(CPG_base_addr + 0x09E8) & 0x00000007) != 0x00000000);// CPG_RSTMON_MIPI_DSI: MIPI_DSI_CMN_RSTB=1, MIPI_DSI_ARESET_N=1, MIPI_DSI_PRESET_N=1
+    while ((reg_read(RZG2L_CPG_BASE + 0x09E8) & 0x00000007) != 0x00000000);// CPG_RSTMON_MIPI_DSI: MIPI_DSI_CMN_RSTB=1, MIPI_DSI_ARESET_N=1, MIPI_DSI_PRESET_N=1
 }
 
 /* Init DSI Link */

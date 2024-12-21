@@ -15,15 +15,15 @@
  */
 
  /* hsclk = 302.1MHz / 16 = 18.88125MHz */
-#define CPG_PL5_REFDIV      2          /* CLK1             */
-#define CPG_PL5_INTIN       74         /* CPG_SIPLL5_CLK4  */
-#define CPG_PL5_FRACIN      4194304    /* CPG_SIPLL5_CLK3  */
-#define CPG_PL5_POSTDIV1    1          /* CLK1             */
-#define CPG_PL5_POSTDIV2    1          /* CLK1             */
-#define CPG_PL5_SSC_EN      1
-#define CPG_PL5_DOWNSPREAD  1
-#define CPG_PL5_DIVVAL      0          /* CPG_SIPLL5_CLK3  */
-#define CPG_PL5_SPREAD      0x16       /* CPG_SIPLL5_CLK5  */
+#define PL5_REFDIV      2          /* CLK1             */
+#define PL5_INTIN       74         /* CPG_SIPLL5_CLK4  */
+#define PL5_FRACIN      4194304    /* CPG_SIPLL5_CLK3  */
+#define PL5_POSTDIV1    1          /* CLK1             */
+#define PL5_POSTDIV2    1          /* CLK1             */
+#define PL5_SSC_EN      1
+#define PL5_DOWNSPREAD  1
+#define PL5_DIVVAL      0          /* CPG_SIPLL5_CLK3  */
+#define PL5_SPREAD      0x16       /* CPG_SIPLL5_CLK5  */
 
 /* vclk1 = 302.1MHz / 4 / 3 = 25.175MHz */
 /* vclk1 = 302.1MHz / 2 / 2 = 75MHz     */

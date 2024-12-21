@@ -1,28 +1,28 @@
 #ifndef __DSI_DEFINE__
 #define __DSI_DEFINE__
 
-/* Link/Phy CLK */
+/* Link/Phy CLK M4φ */
 /*
  00b: 1/16  (16.656 MHz)
  01b: 1/32  (8.328  MHz)
  10b: 1/64  (4.164  MHz)
  11b: 1/128 (2.082  MHz)
  */
-#define DIV_DSI_LPCLK_SET   (0 << 12)
+#define DSI_LPCLK_M4PHI_VAL (0 << 12)
 
 /* 1080p 148.5MHz */
-#define CPG_PL5_REFDIV      2
-#define CPG_PL5_INTIN       148
-#define CPG_PL5_FRACIN      8388608
-#define CPG_PL5_POSTDIV1    1
-#define CPG_PL5_POSTDIV2    1
-#define CPG_PL5_SSC_EN      1
-#define CPG_PL5_DOWNSPREAD  1
-#define CPG_PL5_DIVVAL      0
-#define CPG_PL5_SPREAD      0x16
+#define PL5_REFDIV      2
+#define PL5_INTIN       148
+#define PL5_FRACIN      8388608
+#define PL5_POSTDIV1    1
+#define PL5_POSTDIV2    1
+#define PL5_SSC_EN      1
+#define PL5_DOWNSPREAD  1
+#define PL5_DIVVAL      0
+#define PL5_SPREAD      0x16
 
-#define CPG_DSI_DIV_A       1
-#define CPG_DSI_DIV_B       2
+#define DSI_DIV_A       1
+#define DSI_DIV_B       2
 
 //DPHY 250M
 #define DSI_T_INIT          79801
@@ -65,8 +65,8 @@
 #define vsync_len 5        // Vsync
 
 //DU
-#define LCD_HACTIVE         1920   // resolution x
-#define LCD_VACTIVE         1080   // resolution y
+#define LCD_H         1920   // resolution x
+#define LCD_V         1080   // resolution y
 #define LCD_HFRONT          88     // Hfront
 #define LCD_HSYNC           44     // Hsync
 #define LCD_HBACK           148    // Hback

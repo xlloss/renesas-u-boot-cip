@@ -43,6 +43,21 @@
 #define RZG2L_UART_INCK_HZ              (100000000)
 #define RZG2L_UART_BARDRATE             (115200)
 
+#define CPG_CLKMON_MIPI_DSI             0x06E8
+#define DSI_CLK_SUPPLY                  0x3F
+
+#define CPG_CLKMON_MIPI_DSI             0x06E8
+#define LCD_CLK_SUPPLY                  0x03
+
+#define CPG_RSTMON_MIPI_DSI             0x09E8
+#define DSI_PRESET_N                    (1 << 2)
+#define DSI_ARESET_N                    (1 << 1)
+#define DSI_CMN_RSTB                    (1 << 0)
+#define DSI_RST_SUPPLY (DSI_PRESET_N | DSI_ARESET_N)
+
+#define CPG_RSTMON_LCDC
+#define LCD_RST_SUPPLY                  0x01
+
 /* Boot Info base address */
 #define RZG2L_BOOTINFO_BASE             (RZG2L_SRAM_BASE)
 
@@ -73,6 +88,84 @@
 #define CPG_OTHERFUNC1_REG              0x0BE8
 #define RES0_ON_W_EN                    (1 << 16)
 #define RES0_SET                        (1 << 0)
+
+#define CPG_PL1_DDIV                    0x0200
+
+#define CPG_PL5_SDIV                    0x0420
+#define DSI_CLK_DIVB_WEN                (1 << 24)
+#define DSI_CLK_DIVA_WEN                (1 << 16)
+#define DSI_CLK_DIVA_VAL(n)             (n << 0 | DSI_CLK_DIVA_WEN)
+#define DSI_CLK_DIVB_VAL(n)             (n << 8 | DSI_CLK_DIVB_WEN)
+
+#define CPG_PL2_DDIV                    0x0204
+#define DIV_DSI_LPCLK_WEN               (1 << 28)
+#define DSI_LPCLK_SET(DIV_DSI_LPCLK_WEN | DSI_LPCLK_M4PHI_VAL)
+
+#define CPG_SIPLL5_CLK1                 0x0144
+#define POSTDIV1(n)                     (n << 0)
+#define POSTDIV2(n)                     (n << 4)
+#define REFDIV(n)                       (n << 8)
+
+#define CPG_SIPLL5_CLK2                 0x0148
+#define FOUTVCOPD_WEN(n)                (n << 24)
+#define FOUTVCOPD(n)                    (n << 8)
+
+#define CPG_SIPLL5_CLK3                 0x014C
+#define FRACIN(n)                       (n << 8)
+#define DIVVAL(n)                       (n << 0)
+
+#define CPG_SIPLL5_CLK4                 0x0150
+#define INTIN(n)                        (n << 16)
+
+#define CPG_SIPLL5_CLK5                 0x0154
+#define SPREAD(n)                       (n << 0)
+
+#define CPG_SIPLL5_STBY                 0x0140
+#define DOWNSPRE_AD_WREN                (1 << 20)
+#define DOWNSPREAD                      (DOWNSPRE_AD_WREN | 1 << 4)
+#define RESETB_WEN                      (1 << 16)
+#define RESETB                          (RESETB_WEN | 1 << 0)
+#define SSCG_EN_WEN                     (1 << 18)
+#define SSCG_EN                         (SSCG_EN_WEN | 1 << 0)
+
+#define CPG_CLKON_MIPI_DSI              0x0568
+#define DSI_PLLCLK_ON                   (1 << 0)
+#define DSI_SYSCLK_ON                   (1 << 1)
+#define DSI_ACLK_ON                     (1 << 2)
+#define DSI_PCLK_ON                     (1 << 3)
+#define DSI_VCLK_ON                     (1 << 4)
+#define DSI_LPCLK_ON                    (1 << 5)
+
+#define DSI_PLLCLK_ONEN                 (1 << 16)
+#define DSI_SYSCLK_ONEN                 (1 << 17)
+#define DSI_ACLK_ONEN                   (1 << 18)
+#define DSI_PCLK_ONEN                   (1 << 19)
+#define DSI_VCLK_ONEN                   (1 << 20)
+#define DSI_LPCLK_ONEN                  (1 << 21)
+
+#define CPG_CLKON_LCDC                  0x056C
+#define CLK0_ON                         (1 << 0)
+#define CLK1_ON                         (1 << 1)
+#define CLK0_ONWEN                      (1 << 16)
+#define CLK1_ONWEN                      (1 << 17)
+#define CLK_EN (CLK0_ON | CLK1_ON | CLK2_ON | CLK3_ON | CLK4_ON | CLK5_ON)
+#define CLK_ONEN (CLK0_ONWEN | CLK1_ONWEN | CLK2_ONWEN | CLK3_ONWEN |
+CLK4_ONWEN | CLK5_ONWEN)
+
+#define CPG_CLKON_I2C                   0x0580
+#define I2C0_PCLK_ON                    (1 << 0)
+#define I2C1_PCLK_ON                    (1 << 1)
+#define I2C2_PCLK_ON                    (1 << 2)
+#define I2C3_PCLK_ON                    (1 << 3)
+#define I2C0_PCLK_ONWEN                 (1 << 16)
+#define I2C1_PCLK_ONWEN                 (1 << 17)
+#define I2C2_PCLK_ONWEN                 (1 << 18)
+#define I2C3_PCLK_ONWEN                 (1 << 19)
+#define I2C_CLK_ON                      (I2C0_PCLK_ON | I2C1_PCLK_ON |
+                                         I2C2_PCLK_ON | I2C3_PCLK_ON)
+
+#define I2C_CLK_ONWEN                   (I2C0_PCLK_ONWEN | I2C1_PCLK_ONWEN |
+                                         I2C2_PCLK_ONWEN | I2C3_PCLK_ONWEN)
 
 #define ICCR1                           (RIIC1_BASE_ADDR + 0x000)
 #define ICCR2                           (RIIC1_BASE_ADDR + 0x004)
