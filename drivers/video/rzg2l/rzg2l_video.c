@@ -39,8 +39,8 @@ typedef struct
     uint32_t set_data;
 } set_address_data_t;
 
-#define COMPUTE_X(index,width) (((LCD_HACTIVE)-(width))*3/2 + (index)%((width)*3))
-#define COMPUTE_Y(index,width,height) (((LCD_VACTIVE)-(height))/2+(height)-i/3/(width))
+#define COMPUTE_X(index, width) ((LCD_HACTIVE - width) * 3 / 2 + index % (width * 3))
+#define COMPUTE_Y(index, width, height) ((LCD_VACTIVE - height) / 2 + height - i / 3 / width)
 
 #ifdef DSI_PANEL
 static void rzg2l_cpg_dsi_rst_init(void);
@@ -95,8 +95,7 @@ volatile uint32_t   *g_framebuffer = (volatile uint32_t *)FB_ADDR;
  * GPIO API definitions
  **********************************************************************************************************************/
 
-static void rzg2l_set_iohl( u32 off,
-                 u8 pin, u8 strangth)
+static void rzg2l_set_iohl(u32 off, u8 pin, u8 strangth)
 {
     void __iomem *addr = RZG2L_GPIO_BASE + IOLH(off);
     unsigned long flags;
@@ -112,8 +111,7 @@ static void rzg2l_set_iohl( u32 off,
     writel(reg | (strangth << (pin * 8)), addr);
 }
 
-static void rzg2l_set_sr( u32 off,
-                 u8 pin, u8 mode)
+static void rzg2l_set_sr(u32 off, u8 pin, u8 mode)
 {
     void __iomem *addr = RZG2L_GPIO_BASE + SR(off);
     unsigned long flags;
@@ -130,8 +128,7 @@ static void rzg2l_set_sr( u32 off,
 }
 
 
-static void rzg2l_set_pupd( u32 off,
-                 u8 pin, u8 mode)
+static void rzg2l_set_pupd(u32 off, u8 pin, u8 mode)
 {
     void __iomem *addr = RZG2L_GPIO_BASE + PUPD(off);
     unsigned long flags;
@@ -594,37 +591,37 @@ static void rzg2l_dpi_pin_init(void)
     int ret;
     printf("%s: start\r\n", __func__);
 
-	// Set LCD PW, BL PIN as output
-    rzg2l_set_gpio(0x10 + 3, 1, 0,2);
-    rzg2l_set_gpio(0x10 + 4, 1, 0,2);
-    rzg2l_set_gpio(0x10 + 41, 1, 0,2);
-    rzg2l_set_gpio(0x10 + 45, 2, 0,2);
+    // Set LCD PW, BL PIN as output
+    rzg2l_set_gpio(0x10 + 3, 1, 0, 2);
+    rzg2l_set_gpio(0x10 + 4, 1, 0, 2);
+    rzg2l_set_gpio(0x10 + 41, 1, 0, 2);
+    rzg2l_set_gpio(0x10 + 45, 2, 0, 2);
 
 #if 1
-    rzg2l_set_gpio(0x10 + 7, 2, 1,2);
-    rzg2l_set_gpio(0x10 + 8, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 8, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 8, 2, 1,2);
-    rzg2l_set_gpio(0x10 + 9, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 9, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 10, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 10, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 11, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 11, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 12, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 12, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 13, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 13, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 13, 2, 1,2);
-    rzg2l_set_gpio(0x10 + 14, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 14, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 15, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 15, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 16, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 16, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 17, 0, 1,2);
-    rzg2l_set_gpio(0x10 + 17, 1, 1,2);
-    rzg2l_set_gpio(0x10 + 17, 2, 1,2);
+    rzg2l_set_gpio(0x10 + 7, 2, 1, 2);
+    rzg2l_set_gpio(0x10 + 8, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 8, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 8, 2, 1, 2);
+    rzg2l_set_gpio(0x10 + 9, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 9, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 10, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 10, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 11, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 11, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 12, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 12, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 13, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 13, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 13, 2, 1, 2);
+    rzg2l_set_gpio(0x10 + 14, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 14, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 15, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 15, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 16, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 16, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 17, 0, 1, 2);
+    rzg2l_set_gpio(0x10 + 17, 1, 1, 2);
+    rzg2l_set_gpio(0x10 + 17, 2, 1, 2);
 #endif
     rzg2l_set_gpio(0x10 + 6, 1, 1,2);
     rzg2l_set_gpio(0x10 + 7, 0, 1,2);
@@ -742,40 +739,40 @@ static void adv7535_vmode_cfg(struct udevice *dev, struct udevice *dev_cec)
     line_length = xres + left_margin + right_margin + hsync_len;
     frame_height = yres + upper_margin + lower_margin + vsync_len;
 
-    adv7535_i2c_reg_write(dev_cec, 0x1C, 0xff,0x40);              /* 4 Data Lanes */
-    adv7535_i2c_reg_write(dev_cec, 0x16, 0xff,0x18);              /* Pixel Clock  */ // div 3
-    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff,0xCB);              /* INT_TIMING_GEN */
+    adv7535_i2c_reg_write(dev_cec, 0x1C, 0xff, 0x40); /* 4 Data Lanes */
+    adv7535_i2c_reg_write(dev_cec, 0x16, 0xff, 0x18); /* Pixel Clock  */ // div 3
+    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff, 0xCB); /* INT_TIMING_GEN */
 
     /* video mode settings */
     low = (line_length << 4);
     high = (line_length >> 4);
-    adv7535_i2c_reg_write(dev_cec, 0x28, 0xff,high); /* Total Line Length */
-    adv7535_i2c_reg_write(dev_cec, 0x29, 0xff,low);
+    adv7535_i2c_reg_write(dev_cec, 0x28, 0xff, high); /* Total Line Length */
+    adv7535_i2c_reg_write(dev_cec, 0x29, 0xff, low);
 
     low = (hsync_len << 4);
     high = (hsync_len >> 4);
-    adv7535_i2c_reg_write(dev_cec, 0x2A, 0xff,high); /* Hsync Active Width */
-    adv7535_i2c_reg_write(dev_cec, 0x2B, 0xff,low);
+    adv7535_i2c_reg_write(dev_cec, 0x2A, 0xff, high); /* Hsync Active Width */
+    adv7535_i2c_reg_write(dev_cec, 0x2B, 0xff, low);
 
     low = (right_margin << 4);
     high = (right_margin >> 4);
-    adv7535_i2c_reg_write(dev_cec, 0x2C,0xff,high); /* Horizontal FP Width */
-    adv7535_i2c_reg_write(dev_cec, 0x2D,0xff,low);
+    adv7535_i2c_reg_write(dev_cec, 0x2C,0xff, high); /* Horizontal FP Width */
+    adv7535_i2c_reg_write(dev_cec, 0x2D,0xff, low);
 
     low = (left_margin << 4);
     high = (left_margin >> 4);
-    adv7535_i2c_reg_write(dev_cec, 0x2E, 0xff,high); /* Horizontal BP Width */
-    adv7535_i2c_reg_write(dev_cec, 0x2F, 0xff,low);
+    adv7535_i2c_reg_write(dev_cec, 0x2E, 0xff, high); /* Horizontal BP Width */
+    adv7535_i2c_reg_write(dev_cec, 0x2F, 0xff, low);
 
     low = (frame_height << 4);
     high = (frame_height >> 4);
-    adv7535_i2c_reg_write(dev_cec, 0x30, 0xff,high); /* Total Frame Height */
-    adv7535_i2c_reg_write(dev_cec, 0x31, 0xff,low);
+    adv7535_i2c_reg_write(dev_cec, 0x30, 0xff, high); /* Total Frame Height */
+    adv7535_i2c_reg_write(dev_cec, 0x31, 0xff, low);
 
     low = (vsync_len << 4);
     high = (vsync_len >> 4);
-    adv7535_i2c_reg_write(dev_cec, 0x32,0xff,high); /* Vsync Active Height */
-    adv7535_i2c_reg_write(dev_cec, 0x33,0xff,low);
+    adv7535_i2c_reg_write(dev_cec, 0x32,0xff, high); /* Vsync Active Height */
+    adv7535_i2c_reg_write(dev_cec, 0x33,0xff, low);
 
     low = (lower_margin << 4);
     high = (lower_margin >> 4);
@@ -784,22 +781,22 @@ static void adv7535_vmode_cfg(struct udevice *dev, struct udevice *dev_cec)
 
     low = (upper_margin << 4);
     high = (upper_margin >> 4);
-    adv7535_i2c_reg_write(dev_cec, 0x36, 0xff,high); /* Vertical BP Height */
-    adv7535_i2c_reg_write(dev_cec, 0x37, 0xff,low);
+    adv7535_i2c_reg_write(dev_cec, 0x36, 0xff, high); /* Vertical BP Height */
+    adv7535_i2c_reg_write(dev_cec, 0x37, 0xff, low);
 
     /* Reset Internal Timing Generator */
-    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff,0xCB);
-    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff,0x8B);
-    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff,0xCB);        // 重置时序
+    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff, 0xCB);
+    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff, 0x8B);
+    adv7535_i2c_reg_write(dev_cec, 0x27, 0xff, 0xCB);        // 重置时序
 
-    adv7535_i2c_reg_write(dev_cec, 0x03, 0xff,0x89);        // HDMI 输出使能
-    adv7535_i2c_reg_write(dev_cec, 0x55, 0xff,0x00);        // 关闭测试图案
+    adv7535_i2c_reg_write(dev_cec, 0x03, 0xff, 0x89);        // HDMI 输出使能
+    adv7535_i2c_reg_write(dev_cec, 0x55, 0xff, 0x00);        // 关闭测试图案
 
-    adv7535_i2c_reg_write(dev, 0xAF, 0xff,0x16); /* HDMI Output */ // 设置为HDMI 输出
-    adv7535_i2c_reg_write(dev, 0x55, 0xff,0x02); /* AVI Info-frame */
-    adv7535_i2c_reg_write(dev, 0x56, 0xff,0x28); /* 16:9 */
-    adv7535_i2c_reg_write(dev, 0x40, 0xff,0x00); /* GCP Enable */
-    adv7535_i2c_reg_write(dev, 0x4C, 0xff,0x00); /* 24bpp */
+    adv7535_i2c_reg_write(dev, 0xAF, 0xff, 0x16); /* HDMI Output */ // 设置为HDMI 输出
+    adv7535_i2c_reg_write(dev, 0x55, 0xff, 0x02); /* AVI Info-frame */
+    adv7535_i2c_reg_write(dev, 0x56, 0xff, 0x28); /* 16:9 */
+    adv7535_i2c_reg_write(dev, 0x40, 0xff, 0x00); /* GCP Enable */
+    adv7535_i2c_reg_write(dev, 0x4C, 0xff, 0x00); /* 24bpp */
 
     adv7535_i2c_reg_write(dev, 0x49, 0xff, 0x00); // 8 deth
 
@@ -811,18 +808,18 @@ static void adv7535_vmode_cfg(struct udevice *dev, struct udevice *dev_cec)
     adv7535_i2c_reg_write(dev_cec, 0xBE, 0xff, 0x3D); /* CEC Power Mode */
 
     /* Power */
-    adv7535_i2c_reg_write(dev, 0x41, 0xff,0x10);
-    adv7535_i2c_reg_write(dev, 0xd6, 0xff,0xC8);
+    adv7535_i2c_reg_write(dev, 0x41, 0xff, 0x10);
+    adv7535_i2c_reg_write(dev, 0xd6, 0xff, 0xC8);
 
     adv7535_i2c_reg_write(dev, 0xAF, 0xff, 0x06); /* HDMI Output */ // 设置为HDMI 输出
 
-    adv7535_i2c_reg_write(dev_cec, 0x11, 0xff,0x09);
-    adv7535_i2c_reg_write(dev_cec, 0x81, 0xff,0x06);//CEC_TX_RETRY
+    adv7535_i2c_reg_write(dev_cec, 0x11, 0xff, 0x09);
+    adv7535_i2c_reg_write(dev_cec, 0x81, 0xff, 0x06);//CEC_TX_RETRY
 
-    adv7535_i2c_reg_write(dev_cec, 0x03, 0xff,0x89);
-    adv7535_i2c_reg_write(dev_cec, 0x55, 0xff,0x00);
+    adv7535_i2c_reg_write(dev_cec, 0x03, 0xff, 0x89);
+    adv7535_i2c_reg_write(dev_cec, 0x55, 0xff, 0x00);
 
-    adv7535_i2c_reg_write(dev_cec, 0x05, 0xff,0xC8);
+    adv7535_i2c_reg_write(dev_cec, 0x05, 0xff, 0xC8);
 
     adv7535_i2c_reg_write(dev, 0xE2,0xff, 0x00);
     adv7535_i2c_reg_write(dev, 0xD6,0xff, 0x48);
@@ -831,7 +828,7 @@ static void adv7535_vmode_cfg(struct udevice *dev, struct udevice *dev_cec)
 
 static void adv7535_power_off(struct udevice *dev, struct udevice *dev_cec)
 {
-    adv7535_i2c_reg_write(dev, 0x50, 0xff,0x10);
+    adv7535_i2c_reg_write(dev, 0x50, 0xff, 0x10);
 }
 
 /* Init ADV7535 */
@@ -899,7 +896,9 @@ static void adv7535_deinit(void)
 static void rzg2l_dsi_phy_init(void)
 {
     rzg2l_registers_set(dsi_phy_register_values,ARRAY_SIZE(dsi_phy_register_values));
-    while ((reg_read(RZG2L_CPG_BASE + 0x09E8) & 0x00000007) != 0x00000000);// CPG_RSTMON_MIPI_DSI: MIPI_DSI_CMN_RSTB=1, MIPI_DSI_ARESET_N=1, MIPI_DSI_PRESET_N=1
+
+    // CPG_RSTMON_MIPI_DSI: MIPI_DSI_CMN_RSTB=1, MIPI_DSI_ARESET_N=1, MIPI_DSI_PRESET_N=1
+    while ((reg_read(RZG2L_CPG_BASE + 0x09E8) & 0x00000007) != 0x00000000);
 }
 
 /* Init DSI Link */
@@ -935,15 +934,22 @@ static void rzg2l_vcpd_init(void)
 /* Start LCDC */
 static void rzg2l_lcdc_start(void)
 {
-	/* Disable all due to auto start at rzg2l video init */
-	printf("%s: start\r\n", __func__);
+    /* Disable all due to auto start at rzg2l video init */
+    printf("%s: start\r\n", __func__);
 #if 1
-    //----- Start Video Output -----
-    reg_write(VSPD_base_addr + 0x0000, 0x00000001); // VI6_CMD0: STRCMD=1
-    while ((reg_read(VSPD_base_addr + 0x007C) & 0x00000100) != 0x00000100);// Wait until VI6_DISP0_IRQ_STA.DST=1
+    /*----- Start Video Output ----- */
 
-    reg_write(DU_base_addr + 0x0000, 0x00000100);   // DU_MCR0 : DI_EN=1
-//    while ((reg_read(DSI_LINK_base_addr + ISR) & 0x00000100) != 0x00000100);// ISR.VIN1
+    //VI6_CMD0: STRCMD=1
+    reg_write(VSPD_base_addr + 0x0000, 0x00000001);
+
+    //Wait until VI6_DISP0_IRQ_STA.DST=1
+    while ((reg_read(VSPD_base_addr + 0x007C) & 0x00000100) != 0x00000100);
+
+    //DU_MCR0 : DI_EN=1
+    reg_write(DU_base_addr + 0x0000, 0x00000100);
+
+    //ISR.VIN1
+    //while ((reg_read(DSI_LINK_base_addr + ISR) & 0x00000100) != 0x00000100);
 #endif
 }
 
