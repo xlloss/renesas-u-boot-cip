@@ -5,22 +5,21 @@
 //#include "lcdc_iodefine.h"
 //#include "rzg2l_display.h"
 
-/***********************************************************************************************************************
+/***********************************************************************
  * GPIO PINMUX Macro definitions
- **********************************************************************************************************************/
-
+ **********************************************************************/
 /* 寄存器读写宏定义 */
 #define BIT(nr)         (1UL << (nr))
 
 /* PFC寄存器偏移定义 */
-#define PMC(off)    (0x0200 + (off))      // 端口模式控制
-#define PFC(off)    (0x0400 + (off) * 4)  // 端口功能控制
-#define PWPR        (0x3014)              // 端口写保护寄存器
-#define PWPR_G3S    (0x3000)
-#define IOLH(off)   (0x1000 + (off) * 8)  // IO电平控制
-#define PUPD(off)   (0x1C00 + (off) * 8)  // 上下拉控制
-#define SR(off)     (0x1400 + (off) * 8)  // 转换速率控制
-#define PM(off)     (0x0100 + (off) * 2)  // 端口模式控制
+#define PMC(off)        (0x0200 + (off))      // 端口模式控制
+#define PFC(off)        (0x0400 + (off) * 4)  // 端口功能控制
+#define PWPR            (0x3014)              // 端口写保护寄存器
+#define PWPR_G3S        (0x3000)
+#define IOLH(off)       (0x1000 + (off) * 8)  // IO电平控制
+#define PUPD(off)       (0x1C00 + (off) * 8)  // 上下拉控制
+#define SR(off)         (0x1400 + (off) * 8)  // 转换速率控制
+#define PM(off)         (0x0100 + (off) * 2)  // 端口模式控制
 
 #define PWPR_B0WI       BIT(7)  /* Bit Write Disable */
 #define PWPR_PFCWE      BIT(6) /* PFC Register Write Enable */
@@ -52,42 +51,40 @@ static void rzg2l_dsi_link_init(void);
 static void rzg2l_fpvcg_init(void);
 static void rzg2l_du_init(void);
 static void rzg2l_vcpd_init(void);
-
 static void rzg2l_lcdc_start(void);
 static void rzg2l_lcdc_stop(void);
-
 static void rzg2l_dpi_pin_init(void);
 static void rzg2l_dpi_cpg_init(void);
 
 /* BITS_PER_PIXEL */
-#define DISPLAY_BPP_INPUT0 (24)
+#define DISPLAY_BPP_INPUT0      (24)
 
 
 // DU timing parameters for 480x272@60Hz (根据数据表调整)
-#define LCD_HACTIVE         480  // 水平有效像素
-#define LCD_VACTIVE         272  // 垂直有效行数
-#define LCD_HFRONT          2    // 水平前肩 (Thfp) - 从2+41+2变为2
-#define LCD_HSYNC           41   // 水平同步 (Thbp) - 保持41
-#define LCD_HBACK           2    // 水平后肩 (Thbp) - 从40变为2
-#define LCD_VFRONT          2    // 垂直前肩 (Tvfp) - 从8变为2
-#define LCD_VSYNC           10   // 垂直同步 (Tvb) - 从8变为10
-#define LCD_VBACK           2    // 垂直后肩 (Tvb) - 从8变为2
-#define LCD_VSPOL           1    // 垂直同步极性
-#define LCD_HSPOL           1    // 水平同步极性
-#define LCD_DEMD            0x3  // 数据使能模式
+#define LCD_HACTIVE             480  // 水平有效像素
+#define LCD_VACTIVE             272  // 垂直有效行数
+#define LCD_HFRONT              2    // 水平前肩 (Thfp) - 从2+41+2变为2
+#define LCD_HSYNC               41   // 水平同步 (Thbp) - 保持41
+#define LCD_HBACK               2    // 水平后肩 (Thbp) - 从40变为2
+#define LCD_VFRONT              2    // 垂直前肩 (Tvfp) - 从8变为2
+#define LCD_VSYNC               10   // 垂直同步 (Tvb) - 从8变为10
+#define LCD_VBACK               2    // 垂直后肩 (Tvb) - 从8变为2
+#define LCD_VSPOL               1    // 垂直同步极性
+#define LCD_HSPOL               1    // 水平同步极性
+#define LCD_DEMD                0x3  // 数据使能模式
 
 // VSPD parameters (保持不变)
-#define LCD_BPP             24   // 像素位深
-#define LCD_VIR             0    // 虚拟输入使能
-#define LCD_RDFMT           0x18 // 读格式
-#define LCD_RDCSC           0    // 色彩空间转换使能
-#define LCD_SRCM_ADDR       0x58000000  // 源内存地址
-#define LCD_WRFMT           0x18 // 写格式
-#define LCD_WRCSC           0    // 写色彩空间转换
-#define LCD_ODE             0    // 输出数据使能
-#define LCD_CFMT            0    // 色彩格式
+#define LCD_BPP                 24   // 像素位深
+#define LCD_VIR                 0    // 虚拟输入使能
+#define LCD_RDFMT               0x18 // 读格式
+#define LCD_RDCSC               0    // 色彩空间转换使能
+#define LCD_SRCM_ADDR           0x58000000  // 源内存地址
+#define LCD_WRFMT               0x18 // 写格式
+#define LCD_WRCSC               0    // 写色彩空间转换
+#define LCD_ODE                 0    // 输出数据使能
+#define LCD_CFMT                0    // 色彩格式
 
-#define FB_ADDR	LCD_SRCM_ADDR
+#define FB_ADDR                 LCD_SRCM_ADDR
 
 volatile uint32_t   *g_framebuffer = (volatile uint32_t *)FB_ADDR;
 
@@ -127,7 +124,6 @@ static void rzg2l_set_sr(u32 off, u8 pin, u8 mode)
     writel(reg | (mode << (pin * 8)), addr);
 }
 
-
 static void rzg2l_set_pupd(u32 off, u8 pin, u8 mode)
 {
     void __iomem *addr = RZG2L_GPIO_BASE + PUPD(off);
@@ -143,7 +139,6 @@ static void rzg2l_set_pupd(u32 off, u8 pin, u8 mode)
     reg = readl(addr) & ~(0x03 << (pin * 8));
     writel(reg | (mode << (pin * 8)), addr);
 }
-
 
 static void rzg2l_set_gpio(u8 off, u8 pin, u8 func, u8 set_strangth)
 {
@@ -185,37 +180,37 @@ static void rzg2l_set_gpio(u8 off, u8 pin, u8 func, u8 set_strangth)
 
 static void set_white_screen_display(uint32_t   *framebuffer, uint8_t color)
 {
-        uint32_t size = LCD_HACTIVE * LCD_VACTIVE * (DISPLAY_BPP_INPUT0 >> 3);
+    uint32_t size = LCD_HACTIVE * LCD_VACTIVE * (DISPLAY_BPP_INPUT0 >> 3);
 
-        printf("%s: start\r\n", __func__);
-        dcache_disable();
-        printf("%s: start: framebuffer[Addr:%8X] set to %x\r\n",
-                __func__, framebuffer, color);
-        memset( framebuffer, color, size);
-        dcache_enable();
+    printf("%s: start\r\n", __func__);
+    dcache_disable();
+    printf("%s: start: framebuffer[Addr:%8X] set to %x\r\n",
+            __func__, framebuffer, color);
+    memset( framebuffer, color, size);
+    dcache_enable();
 }
 
 int rzg2l_video_init(void)
 {
-        printf("%s: start\r\n", __func__);
-        /* adv7535_deinit(); */
-        /* rzg2l_cpg_dsi_rst_init(); */
+    printf("%s: start\r\n", __func__);
+    /* adv7535_deinit(); */
+    /* rzg2l_cpg_dsi_rst_init(); */
 
-        /* Pinmux setup for DPI panel */
-        rzg2l_dpi_pin_init();
+    /* Pinmux setup for DPI panel */
+    rzg2l_dpi_pin_init();
 
-        /* CPG setup for DPI panel */
-        rzg2l_dpi_cpg_init();
+    /* CPG setup for DPI panel */
+    rzg2l_dpi_cpg_init();
 
-        /* Initialize display buffer */
-        set_white_screen_display(g_framebuffer, 0xff);
+    /* Initialize display buffer */
+    set_white_screen_display(g_framebuffer, 0xff);
 
-        rzg2l_du_init();
-        rzg2l_vcpd_init();
-        rzg2l_fpvcg_init();
-        rzg2l_lcdc_start();
+    rzg2l_du_init();
+    rzg2l_vcpd_init();
+    /* rzg2l_fpvcg_init(); */
+    rzg2l_lcdc_start();
 
-        return 0;
+    return 0;
 }
 
 
@@ -302,15 +297,14 @@ static const uint32_t dpi_pin_register_values[][2] = { //0x11030000
 #define CPG_DSI_DIV_A       2
 #define CPG_DSI_DIV_B       1
 
-
-static const uint32_t cpg_dpi_reg_init[][2] = {//0x11010000  //step1
-    {0x1101014c, (PL5_DIVVAL << 0) | (PL5_FRACIN << 8)}, // CPG_SIPLL5_CLK3
-    {0x11010150, 0x000000ff | (PL5_INTIN << 16)},                                                     // CPG_SIPLL5_CLK4
+static const uint32_t cpg_dpi_reg_init[][2] = {                                               // 0x11010000  //step1
+    {0x1101014c, (PL5_DIVVAL << 0) | (PL5_FRACIN << 8)},                                      // CPG_SIPLL5_CLK3
+    {0x11010150, 0x000000ff | (PL5_INTIN << 16)},                                             // CPG_SIPLL5_CLK4
     {0x11010144, 0x01110000 | (PL5_POSTDIV1 << 0) | (PL5_POSTDIV2 << 4) | (PL5_REFDIV << 8)}, // CPG_SIPLL5_CLK1
-    {0x11010420, 0x01010000 | (DSI_DIV_A << 0) | (DSI_DIV_B << 8)},                               // CPG_PL5_SDIV
-    {0x11010154, (PL5_INTIN << 16)},                                                                  // CPG_SIPLL5_CLK5
-    {0x11010140, 0x00150011},                                                                             // CPG_SIPLL5_STBY
-    {0x1101056c, 0x00030003},                                                                             // CPG_CLKON_LCDC
+    {0x11010420, 0x01010000 | (DSI_DIV_A << 0) | (DSI_DIV_B << 8)},                           // CPG_PL5_SDIV
+    {0x11010154, (PL5_INTIN << 16)},                                                          // CPG_SIPLL5_CLK5
+    {0x11010140, 0x00150011},                                                                 // CPG_SIPLL5_STBY
+    {0x1101056c, 0x00030003},                                                                 // CPG_CLKON_LCDC
     {0x11010598, 0x00010001},
 };
 
@@ -320,15 +314,10 @@ static const uint32_t cpg_dpi_rst_init[][2] = {
 };
 
 static const uint32_t fcpvd_register_values[][2] = {
-    // 0x10880000
-    {0x10880000, 0x00000109},
-    // {0x10880004,0x00000000},
-    // {0x10880010,0x00000000},
-    // {0x10880018,0x00000000},
+    {RZG2L_FCPVD_BASE, 0x00000109},
 };
 
 #ifdef DSI_PANEL
-
 /* step2 */
 static const uint32_t cpg_dsi_init[][2] = {
  /* {RZG2L_CPG_BASE + CPG_PL1_DDIV, 0x10000000},*/
@@ -336,7 +325,8 @@ static const uint32_t cpg_dsi_init[][2] = {
  {RZG2L_CPG_BASE + CPG_PL2_DDIV, DIV_DSI_LPCLK_SET},
  {RZG2L_CPG_BASE + CPG_PL5_SDIV, DSI_CLK_DIVA_VAL(1) | DSI_CLK_DIVB_VAL(1)},
  {RZG2L_CPG_BASE + CPG_SIPLL5_CLK1, POSTDIV1(PL5_POSTDIV1) |
-				POSTDIV2(PL5_POSTDIV2) | REFDIV(PL5_REFDIV)},
+                                        POSTDIV2(PL5_POSTDIV2) |
+                                        REFDIV(PL5_REFDIV)},
 
  /* {RZG2L_CPG_BASE + CPG_SIPLL5_CLK2, FOUTVCOPD_WEN(1) | FOUTVCOPD(1)},*/
 
@@ -453,25 +443,28 @@ static const uint32_t dsi_link_register_values[][2] = {//0x10860000 //use linux 
 };
 #endif
 
-static const uint32_t du_register_values[][2] = {//0x10890000 //use linux value
+#define DU_MCR0 0x00
+#define DU_MSR0 0x04
+
+static const uint32_t du_reg_init[][2] = {//0x10890000 //use linux value
 #ifdef DSI_NANEL
-//	{0x10890000,0x00010100},//DU_MCR0
-//	{0x10890004,0x00010100},//DU_MSR0
-//	{0x10890008,0x00000000},//DU_MSR1
-    {0x1089000c,0x00000000},//DU_IMR0
-    {0x10890010,(1 << 8 ) | (1 << 9) | (LCD_VSPOL << 16) | (LCD_HSPOL << 17)},//DU_DITR0
-    {0x10890014,DU_DITR1_VSA(LCD_VSYNC) | DU_DITR1_VACTIVE(LCD_VACTIVE)},//DU_DITR1
-    {0x10890018,DU_DITR2_VBP(LCD_VBACK) | DU_DITR2_VFP(LCD_VFRONT)},//DU_DITR2
-    {0x1089001c,DU_DITR3_HSA(LCD_HSYNC) | DU_DITR3_HACTIVE(LCD_HACTIVE)},//DU_DITR3
-    {0x10890020,DU_DITR4_HBP(LCD_HBACK) | DU_DITR4_HFP(LCD_HFRONT)},//DU_DITR4
-    {0x10890024,0x00000000},//DU_DITR5
-//	{0x10890040,0x00010000},//DU_MCR1 //patch for underflow
-    {0x1089004c,0x0000001F},//DU_PBCR0
-    {0x10890050,0x00000001},//DU_PBCR1
-    {0x10890054,0x00ff00ff},//DU_PBCR2
+    //{RZG2L_DU_BASE, 0x00010100},//DU_MCR0
+    //{0x10890004, 0x00010100},//DU_MSR0
+    //{0x10890008, 0x00000000},//DU_MSR1
+    {0x1089000c, 0x00000000},//DU_IMR0
+    {0x10890010, (1 << 8 ) | (1 << 9) | (LCD_VSPOL << 16) | (LCD_HSPOL << 17)}, //DU_DITR0
+    {0x10890014, DU_DITR1_VSA(LCD_VSYNC) | DU_DITR1_VACTIVE(LCD_VACTIVE)},      //DU_DITR1
+    {0x10890018, DU_DITR2_VBP(LCD_VBACK) | DU_DITR2_VFP(LCD_VFRONT)},           //DU_DITR2
+    {0x1089001c, DU_DITR3_HSA(LCD_HSYNC) | DU_DITR3_HACTIVE(LCD_HACTIVE)},      //DU_DITR3
+    {0x10890020, DU_DITR4_HBP(LCD_HBACK) | DU_DITR4_HFP(LCD_HFRONT)},           //DU_DITR4
+    {0x10890024, 0x00000000},   //DU_DITR5
+    //{0x10890040,0x00010000},  //DU_MCR1 //patch for underflow
+    {0x1089004c, 0x0000001F},   //DU_PBCR0
+    {0x10890050, 0x00000001},   //DU_PBCR1
+    {0x10890054, 0x00ff00ff},   //DU_PBCR2
 #else
     {0x1089000c, 0x00000000},                                                             // DU_IMR0
-    {0x10890010, (1 << 8) | (1 << 9) | (LCD_VSPOL << 16) | (LCD_HSPOL << 17)}, // DU_DITR0  // DPI CLKMODE
+    {0x10890010, (1 << 8) | (1 << 9) | (LCD_VSPOL << 16) | (LCD_HSPOL << 17)},            // DU_DITR0  // DPI CLKMODE
     {0x10890014, DU_DITR1_VSA(LCD_VSYNC) | DU_DITR1_VACTIVE(LCD_VACTIVE)},                // DU_DITR1
     {0x10890018, DU_DITR2_VBP(LCD_VBACK) | DU_DITR2_VFP(LCD_VFRONT)},                     // DU_DITR2
     {0x1089001c, DU_DITR3_HSA(LCD_HSYNC) | DU_DITR3_HACTIVE(LCD_HACTIVE)},                // DU_DITR3
@@ -913,14 +906,14 @@ static void rzg2l_dsi_link_init(void)
 static void rzg2l_fpvcg_init(void)
 {
     printf("FCPVD Init\r\n");
-    rzg2l_registers_set(fcpvd_register_values,ARRAY_SIZE(fcpvd_register_values));
+    rzg2l_registers_set(fcpvd_register_values, ARRAY_SIZE(fcpvd_register_values));
 }
 
 /* Init DU */
 static void rzg2l_du_init(void)
 {
     printf("DU Init\r\n");
-    rzg2l_registers_set(du_register_values,ARRAY_SIZE(du_register_values));
+    rzg2l_registers_set(du_reg_init, ARRAY_SIZE(du_reg_init));
 }
 
 /* Init VPCD */

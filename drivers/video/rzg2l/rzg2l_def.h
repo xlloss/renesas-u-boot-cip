@@ -12,6 +12,8 @@
 #define RZG2L_SCIF0_BASE                (0x1004B800)
 #define RZG2L_SPIMULT_BASE              (0x10060000)
 #define RZG2L_SPIMULT_WBUF_BASE         (0x10070000)
+#define RZG2L_FCPVD_BASE                (0x10880000)
+#define RZG2L_DU_BASE                   (0x10890000)
 #define RZG2L_SYC_BASE                  (0x11000000)
 #define RZG2L_CPG_BASE                  (0x11010000)
 #define RZG2L_SYSC_BASE                 (0x11020000)
@@ -71,7 +73,6 @@
 #define DSI_LINK_base_addr              0x10860000UL
 #define VSPD_base_addr                  0x10870000UL
 #define FCPVD_base_addr                 0x10880000UL
-#define DU_base_addr                    0x10890000UL
 #define USB_Ch1_Host_base_addr          0x11C70000UL
 
 #define CPG_CLKMON_LCDC                 0x06EC
