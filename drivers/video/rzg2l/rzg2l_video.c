@@ -190,64 +190,6 @@ static void set_white_screen_display(uint32_t   *framebuffer, uint8_t color)
     dcache_enable();
 }
 
-int rzg2l_video_init(void)
-{
-    printf("%s: start\r\n", __func__);
-    /* adv7535_deinit(); */
-    /* rzg2l_cpg_dsi_rst_init(); */
-
-    /* Pinmux setup for DPI panel */
-    rzg2l_dpi_pin_init();
-
-    /* CPG setup for DPI panel */
-    rzg2l_dpi_cpg_init();
-
-    /* Initialize display buffer */
-    set_white_screen_display(g_framebuffer, 0xff);
-
-    rzg2l_du_init();
-    rzg2l_vcpd_init();
-    /* rzg2l_fpvcg_init(); */
-    rzg2l_lcdc_start();
-
-    return 0;
-}
-
-
-void do_rzg2l_video_start(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
-{
-    return rzg2l_lcdc_start();
-}
-
-void do_rzg2l_video_stop(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
-{
-    return rzg2l_lcdc_stop();
-}
-
-int do_rzg2l_video_load_img(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
-{
-    dcache_disable();
-    return run_command("fatload mmc 1:1 0x58000000 boot_img.bin",0);
-}
-
-U_BOOT_CMD(
-    rzg2l_video_start, 1, 0, do_rzg2l_video_start,
-    "Start Rzg2l",
-    ""
-);
-
-U_BOOT_CMD(
-    rzg2l_video_stop, 1, 0, do_rzg2l_video_stop,
-    "Stop Rzg2l LCDC",
-    ""
-);
-
-U_BOOT_CMD(
-    rzg2l_video_load_img, 1, 0, do_rzg2l_video_load_img,
-    "Load Rzg2l",
-    ""
-);
-
 static const uint32_t dpi_pin_register_values[][2] = { //0x11030000
 //    {0x11033014,0x00000000},    //Diable write protect (PWPR) for PFC
 //    {0x11033014,0x00000040},
@@ -297,15 +239,22 @@ static const uint32_t dpi_pin_register_values[][2] = { //0x11030000
 #define CPG_DSI_DIV_A       2
 #define CPG_DSI_DIV_B       1
 
-static const uint32_t cpg_dpi_reg_init[][2] = {                                               // 0x11010000  //step1
-    {0x1101014c, (PL5_DIVVAL << 0) | (PL5_FRACIN << 8)},                                      // CPG_SIPLL5_CLK3
-    {0x11010150, 0x000000ff | (PL5_INTIN << 16)},                                             // CPG_SIPLL5_CLK4
-    {0x11010144, 0x01110000 | (PL5_POSTDIV1 << 0) | (PL5_POSTDIV2 << 4) | (PL5_REFDIV << 8)}, // CPG_SIPLL5_CLK1
-    {0x11010420, 0x01010000 | (DSI_DIV_A << 0) | (DSI_DIV_B << 8)},                           // CPG_PL5_SDIV
-    {0x11010154, (PL5_INTIN << 16)},                                                          // CPG_SIPLL5_CLK5
-    {0x11010140, 0x00150011},                                                                 // CPG_SIPLL5_STBY
-    {0x1101056c, 0x00030003},                                                                 // CPG_CLKON_LCDC
-    {0x11010598, 0x00010001},
+static const uint32_t cpg_dpi_reg_init[][2] = {
+    {RZG2L_CPG_BASE + CPG_SIPLL5_CLK3, (PL5_DIVVAL << 0) |
+                                       (PL5_FRACIN << 8)},
+
+    {RZG2L_CPG_BASE + CPG_SIPLL5_CLK4, PL5_INTIN << 16},
+
+    {RZG2L_CPG_BASE + CPG_SIPLL5_CLK1, POSTDIV1(PL5_POSTDIV1) |
+                                       POSTDIV2(PL5_POSTDIV2) |
+                                       REFDIV(PL5_REFDIV)},
+
+    {RZG2L_CPG_BASE + CPG_PL5_SDIV, DSI_CLK_DIVA_VAL(DSI_DIV_A) |
+                                    DSI_CLK_DIVB_VAL(DSI_DIV_B)},
+
+    {RZG2L_CPG_BASE + CPG_SIPLL5_STBY, DOWNSPREAD | RESETB | SSCG_EN},
+    {RZG2L_CPG_BASE + CPG_CLKON_LCDC, LCD_CLK_EN},
+    {RZG2L_CPG_BASE + CPG_CLKON_GPIO, GPIO_CLK_EN},
 };
 
 static const uint32_t cpg_dpi_rst_init[][2] = {
@@ -324,8 +273,8 @@ static const uint32_t cpg_dsi_init[][2] = {
 
  {RZG2L_CPG_BASE + CPG_PL2_DDIV, DIV_DSI_LPCLK_SET},
  {RZG2L_CPG_BASE + CPG_PL5_SDIV, DSI_CLK_DIVA_VAL(1) | DSI_CLK_DIVB_VAL(1)},
- {RZG2L_CPG_BASE + CPG_SIPLL5_CLK1, POSTDIV1(PL5_POSTDIV1) |
-                                        POSTDIV2(PL5_POSTDIV2) |
+ {RZG2L_CPG_BASE + CPG_SIPLL5_CLK1, POSTDIV1(PL5_POSTDIV1)      |
+                                        POSTDIV2(PL5_POSTDIV2)  |
                                         REFDIV(PL5_REFDIV)},
 
  /* {RZG2L_CPG_BASE + CPG_SIPLL5_CLK2, FOUTVCOPD_WEN(1) | FOUTVCOPD(1)},*/
@@ -338,108 +287,157 @@ static const uint32_t cpg_dsi_init[][2] = {
  {RZG2L_CPG_BASE + CPG_CLKON_LCDC, CLK1_ONWEN | CLK0_ONWEN | CL1_ON | CL0_ON},
  {RZG2L_CPG_BASE + CPG_CLKON_I2C, I2C_CLK_ON | I2C_CLK_ONWEN},
 };
+
 #define CPG_RST_MIPI_DSI        0x0868
 #define CPG_RST_LCDC            0x086C
 #define CPG_RST_I2C             0x0880
 #define CPG_OTHERFUNC1_REG      0x0BE8
 
 static const uint32_t cpg_dsi_rst_init[][2] = {
-    {RZG2L_CPG_BASE + CPG_RST_MIPI_DSI, 0x00060006},
-    {RZG2L_CPG_BASE + CPG_RST_LCDC, 0x00010001},
-    {RZG2L_CPG_BASE + CPG_RST_I2C, 0x000f000f},
+    {RZG2L_CPG_BASE + CPG_RST_MIPI_DSI,   0x00060006},
+    {RZG2L_CPG_BASE + CPG_RST_LCDC,       0x00010001},
+    {RZG2L_CPG_BASE + CPG_RST_I2C,        0x000f000f},
     {RZG2L_CPG_BASE + CPG_OTHERFUNC1_REG, 0x00010001},
 };
 
-static const uint32_t dsi_phy_register_values[][2] = {//0x10850000
-    {0x00000000, 1},// wait us
-    {0x10850004, DSIDPHYTIM0_TCLK_MISS(1) | DSIDPHYTIM0_T_INIT(DSI_T_INIT)},//DPHYTIM0
-    {0x10850008, DSIDPHYTIM1_THS_PREPARE(DSI_THS_PREPARE) | DSIDPHYTIM1_TCLK_PREPARE(DSI_TCLK_SETTLE) |DSIDPHYTIM1_THS_SETTLE(DSI_THS_SETTLE) |DSIDPHYTIM1_TCLK_SETTLE(DSI_TCLK_SETTLE)},//DPHYTIM1
-    {0x1085000c, DSIDPHYTIM2_TCLK_TRAIL(DSI_TCLK_TRAIL) | DSIDPHYTIM2_TCLK_POST(DSI_TCLK_POST) | DSIDPHYTIM2_TCLK_PRE(DSI_TCLK_PRE) | DSIDPHYTIM2_TCLK_ZERO(DSI_TCLK_ZERO)},//DPHYTIM2
-    {0x10850010, DSIDPHYTIM3_TLPX(DSI_TLPX) | DSIDPHYTIM3_THS_EXIT(DSI_THS_EXIT) | DSIDPHYTIM3_THS_TRAIL(DSI_THS_TRAIL) | DSIDPHYTIM3_THS_ZERO(DSI_THS_ZERO)},//DPHYTIM3
-    {0x10850040, 0x00000001},//DPHYCTRL1 //linux:no this reg
-    {0x10850044, 0x5A8BBBBB},//DPHYTRIM0 //linux:no this reg
-    {0x10850000, 0x00010105},//DPHYCTRL0
+#define DSI_DPHY        0x10850000
+#define DSIDPHYCTRL0    0x00
+#define DSIDPHYTIM0     0x04
+#define DSIDPHYTIM1     0x08
+#define DSIDPHYTIM2     0x0C
+#define DSIDPHYTIM3     0x10
+#define DPHYCTRL1       0x40
+#define DPHYTRIM0       0x44
+static const uint32_t dsi_phy_register_values[][2] = {
+    {0x00000000, 1},/* wait us */
+    {DSI_DPHY + DSIDPHYTIM0, DSIDPHYTIM0_TCLK_MISS(1) | DSIDPHYTIM0_T_INIT(DSI_T_INIT)},
+    {DSI_DPHY + DSIDPHYTIM1, DSIDPHYTIM1_THS_PREPARE(DSI_THS_PREPARE)     |
+                                DSIDPHYTIM1_TCLK_PREPARE(DSI_TCLK_SETTLE) |
+                                DSIDPHYTIM1_THS_SETTLE(DSI_THS_SETTLE)    |
+                                DSIDPHYTIM1_TCLK_SETTLE(DSI_TCLK_SETTLE)},
+
+    {DSI_DPHY  + DSIDPHYTIM2, DSIDPHYTIM2_TCLK_TRAIL(DSI_TCLK_TRAIL) |
+                                DSIDPHYTIM2_TCLK_POST(DSI_TCLK_POST) |
+                                DSIDPHYTIM2_TCLK_PRE(DSI_TCLK_PRE)   |
+                                DSIDPHYTIM2_TCLK_ZERO(DSI_TCLK_ZERO)},
+
+    {DSI_DPHY  + DSIDPHYTIM3, DSIDPHYTIM3_TLPX(DSI_TLPX)             |
+                                DSIDPHYTIM3_THS_EXIT(DSI_THS_EXIT)   |
+                                DSIDPHYTIM3_THS_TRAIL(DSI_THS_TRAIL) |
+                                DSIDPHYTIM3_THS_ZERO(DSI_THS_ZERO)},
+
+    {DSI_DPHY + DPHYCTRL1, 0x00000001},/* DPHYCTRL1 //linux:no this reg */
+    {DSI_DPHY + DPHYTRIM0, 0x5A8BBBBB},/* DPHYTRIM0 //linux:no this reg */
+    {DSI_DPHY + DSIDPHYCTRL0, 0x00010105},
     {0x00000000, 20},// wait us
-    {0x10850000, 0x00010107},//DPHYCTRL0
+    {DSI_DPHY + DSIDPHYCTRL0, 0x00010107},
     {0x00000000, 10},// wait us
-    {0x11010868, 0x00010001},/*CPG_RST_MIPI_DSI*/
+    {DSI_DPHY + DSIDPHYCTRL0, 0x00010001},
 };
 
+#define ISRR                    0x0000
+
+#define LINKSR                  0x0010
+#define HSBUSY                  (0x1 << 12)
+#define VICHRUN1                (0x1 << 8)
+
+#define TXSETR                  0x0100
+#define DSI_LANE(n)            (n << 0)
+#define NUM_LANE_1              0
+#define NUM_LANE_2              1
+#define NUM_LANE_3              2
+#define NUM_LANE_4              3
+#define LANE_CLK_EN             (1 << 8)
+#define LANE_DATA_EN            (1 << 9)
+#define NUM_LANE_CA             (3 << 16) /* fixed value */
+
+#define ULPSSETR                0x0108
+#define ULPSWKUP(n)             (n << 0)
+
+#define ULPSCR                  0x010C
+#define RSTCR                   0x0110
+#define RSTSR                   0x0114
+
+#define DSISETR                 0x0120
+#define MRPSZ(n)                (n << 0)
+#define ECCEN(n)                (n << 16)
+#define CRCEN(n)                (n << 20)
+#define EOTPEN(n)               (n << 31)
+
+
+#define RXBUFSZR                0x0124
+#define TXPPD0R                 0x0160
+#define TXPPD1R                 0x0164
+#define TXPPD2R                 0x0168
+#define TXPPD3R                 0x016C
+#define RXSR                    0x0200
+#define RXSCR                   0x0204
+#define PRESPTOBTASETR          0x0210
+#define PRESPTOLPSETR           0x0214
+#define PRESPTOHSSETR           0x0218
+#define AKEPLATIR               0x0220
+#define AKEPACMSR               0x0224
+#define AKEPSCR                 0x0228
+#define RXRSSR                  0x0230
+#define RXRSSCR                 0x0234
+#define RXRINFOOWSR             0x0238
+#define RXRINFOOWSCR            0x023C
+#define RXRSS0R                 0x0240
+#define RXRSS1R                 0x0244
+#define RXRSS2R                 0x0248
+#define RXRSS3R                 0x024c
+#define RXPPD0R                 0x02C0
+#define RXPPD1R                 0x02C4
+#define RXPPD2R                 0x02C8
+#define RXPPD3R                 0x02CC
+
 static const uint32_t dsi_link_register_values[][2] = {//0x10860000 //use linux value
-    // {0x00000000,1000},// wait us
-//	{0x10860000,0x00000000},//ISR
-//	{0x10860010,0x00001100},//LINKSR
-    {0x10860100,0x00030303},//TXSETR
-    {0x10860108,0x000000A0},//ULPSSETR
-//	{0x1086010c,0x00000000},//ULPSCR
-//	{0x10860110,0x00000000},//RSTCR
-//	{0x10860114,0x00000000},//RSTSR
-    {0x10860120,0x80F10001},//DSISETR
-//	{0x10860124,0x00000000},//RXBUFSZR
-//	{0x10860160,0x00000000},//TXPPD0R
-//	{0x10860164,0x00000000},//TXPPD1R
-//	{0x10860168,0x00000000},//TXPPD2R
-//	{0x1086016c,0x00000000},//TXPPD3R
-//	{0x10860200,0x00000000},//RXSR
-//	{0x10860204,0x00000000},//RXSCR
-//	{0x1086020c,0x00000000},
-    {0x10860210,0x00000000},//PRESPTOBTASETR
-    {0x10860214,0x00000000},//PRESPTOLPSETR
-    {0x10860218,0x00000000},//PRESPTOHSSETR
-//	{0x1086021c,0x00000000},
-//	{0x10860220,0x00000000},//AKEPLATIR
-//	{0x10860224,0x00000000},//AKEPACMSR
-//	{0x10860228,0x00000000},//AKEPSCR
-//	{0x10860230,0x00000000},//RXRSSR
-//	{0x10860234,0x00000000},//RXRSSCR
-//	{0x10860238,0x00000000},//RXRINFOOWSR
-//	{0x1086023c,0x00000000},//RXRINFOOWSCR
-//	{0x10860240,0x00000000},//RXRSS0R
-//	{0x10860244,0x00000000},//RXRSS1R
-//	{0x10860248,0x00000000},//RXRSS2R
-//	{0x1086024c,0x00000000},//RXRSS3R
-//	{0x108602c0,0x00000000},//RXPPD0R
-//	{0x108602c4,0x00000000},//RXPPD1R
-//	{0x108602c8,0x00000000},//RXPPD2R
-//	{0x108602cc,0x00000000},//RXPPD3R
-    {0x108602e0,0x00000000},//HSTXTOSETR
-    {0x108602e4,0x00000000},//LRXHTOSETR
-    {0x108602e8,0x00000000},//TATOSETR
-//	{0x10860300,0x00000000},//FERRSR
-//	{0x10860304,0x00000000},//FERRSCR
-//	{0x10860310,0x000000FF},//OPMSWTMR  //doc: no defination
-    {0x10860314,CLSTPTSETR_CLKKPT(DSI_CLKKPT) | CLSTPTSETR_CLKBFHT(DSI_CLKBFHT) | CLSTPTSETR_CLKSTPT(DSI_CLKSTPT)},//CLSTPTSETR
-    {0x10860318,LPTRNSTSETR_GOLPBKT(DSI_GOLPBKT)},//LPTRNSTSETR
-//	{0x10860320,0x040000F1},//PLSR
-//	{0x10860324,0x00000000},//PLSCR
-//	{0x10860410,0x0000000D},//VICH1SR
-//	{0x10860414,0x00000000},//VICH1SCR
-//	{0x108605c0,0x00800000},//SQCH0SET0R
-//	{0x108605c4,0x08000000},//SQCH0SET1R
-//	{0x108605d0,0x00000000},//SQCH0SR
-//	{0x108605d4,0x00000000},//SQCH0SCR
-//	{0x10860600,0x00800000},//SQCH1SET0R
-//	{0x10860604,0x08300000},//SQCH1SET1R
-//	{0x10860610,0x00000000},//SQCH1SR
-//	{0x10860614,0x00000000},//SQCH1SCR
-    {0x10860208,0x17F7FF01},//RXIER
-    {0x10860308,0x001F0007},//FERRIER
-    {0x10860328,0x3F003000},//PLIER
-    {0x10860418,0x7CF0000B},//VICH1IER
-    {0x108605d8,0x7D490110},//SQCH0IER
-    {0x10860618,0x7D490110},//SQCH1IER
-    {0x10860104,0x00000003},//HSCLKSETR
-    {0x10860420,0x003E8000},//VICH1PPSETR
-    {0x10860428,VICH1VSSETR_VACTIVE(LCD_VACTIVE) | VICH1VSSETR_VSA(LCD_VSYNC)},//VICH1VSSETR
-//	{0x10860428,(LCD_VSYNC << 0) | (LCD_VSPOL << 15) | (LCD_VACTIVE << 16)},//VICH1VSSETR
-    {0x1086042c,VICH1VPSETR_VFP(LCD_VFRONT) | VICH1VPSETR_VBP(LCD_VBACK)},//VICH1VPSETR
-    {0x10860430,VICH1HSSETR_HACTIVE(LCD_HACTIVE) | VICH1HSSETR_HSA(LCD_HSYNC)},//VICH1HSSETR
-//	{0x10860430,(LCD_HSYNC << 0) | (LCD_HSPOL << 15) | (LCD_HACTIVE << 16)},//VICH1HSSETR
-    {0x10860434,VICH1HPSETR_HFP(LCD_HFRONT) | VICH1HPSETR_HBP(LCD_HBACK)},//VICH1HPSETR
-    {0x10860404,VICH1SET1R_DLY(DSI_DLY)},//VICH1SET1R
-//	{0x10860404,(DSI_DLY << 2)},//VICH1SET1R
+    //{0x00000000,1000},// wait us
+    //{RZG2L_DSI_LINK_BASE + LINKSR, 0x00001100},
+    {RZG2L_DSI_LINK_BASE + TXSETR, NUM_LANE_CA |
+                                   LANE_DATA_EN |
+                                   LANE_CLK_EN |
+                                   DSI_LANE(NUM_LANE_4)},
+
+    {RZG2L_DSI_LINK_BASE + ULPSSETR, ULPSWKUP(0xA0)},
+    {RZG2L_DSI_LINK_BASE + DSISETR, EOTPEN(1) | CRCEN(0x0F) | ECCEN(1) | MRPSZ(1)},
+
+    /* {0x10860310,0x000000FF},//OPMSWTMR  //doc: no defination */
+
+    {RZG2L_DSI_LINK_BASE + CLSTPTSETR, CLSTPTSETR_CLKKPT(DSI_CLKKPT)    |
+                                        CLSTPTSETR_CLKBFHT(DSI_CLKBFHT) |
+                                        CLSTPTSETR_CLKSTPT(DSI_CLKSTPT)},
+
+    {RZG2L_DSI_LINK_BASE + LPTRNSTSETR, LPTRNSTSETR_GOLPBKT(DSI_GOLPBKT)},
+    /* {RZG2L_DSI_LINK_BASE + PLSR, 0x040000F1},        */
+    /* {RZG2L_DSI_LINK_BASE + SQCH0SET0R,0x00800000},   */
+    /* {RZG2L_DSI_LINK_BASE + SQCH0SET1R,0x08000000},   */
+    /* {RZG2L_DSI_LINK_BASE + SQCH1SET0R,0x00800000},   */
+    /* {RZG2L_DSI_LINK_BASE + SQCH1SET1R,0x08300000},   */
+    {RZG2L_DSI_LINK_BASE + RXIER,       0x17F7FF01},
+    {RZG2L_DSI_LINK_BASE + FERRIER,     0x001F0007},
+    {RZG2L_DSI_LINK_BASE + PLIER,       0x3F003000},
+    {RZG2L_DSI_LINK_BASE + VICH1IER,    0x7CF0000B},
+    {RZG2L_DSI_LINK_BASE + SQCH0IER,    0x7D490110},
+    {RZG2L_DSI_LINK_BASE + SQCH1IER,    0x7D490110},
+    {RZG2L_DSI_LINK_BASE + HSCLKSETR,   0x00000003},
+    {RZG2L_DSI_LINK_BASE + VICH1PPSETR, 0x003E8000},
+    {RZG2L_DSI_LINK_BASE + VICH1VSSETR, VICH1VSSETR_VACTIVE(LCD_VACTIVE) |
+                                        VICH1VSSETR_VSA(LCD_VSYNC)},
+    /* {RZG2L_DSI_LINK_BASE + VICH1VSSETR, (LCD_VSYNC << 0) | (LCD_VSPOL << 15) | (LCD_VACTIVE << 16)}, */
+    {RZG2L_DSI_LINK_BASE + VICH1VPSETR, VICH1VPSETR_VFP(LCD_VFRONT) |
+                                        VICH1VPSETR_VBP(LCD_VBACK)},//VICH1VPSETR
+
+    {RZG2L_DSI_LINK_BASE + VICH1HSSETR, VICH1HSSETR_HACTIVE(LCD_HACTIVE) |
+                                        VICH1HSSETR_HSA(LCD_HSYNC)},//VICH1HSSETR
+
+    /* {RZG2L_DSI_LINK_BASE + VICH1HSSETR, (LCD_HSYNC << 0) | (LCD_HSPOL << 15) | (LCD_HACTIVE << 16)}, */
+    {RZG2L_DSI_LINK_BASE + VICH1HPSETR, VICH1HPSETR_HFP(LCD_HFRONT) |
+                                        VICH1HPSETR_HBP(LCD_HBACK)},
+    {RZG2L_DSI_LINK_BASE + VICH1SET1R, VICH1SET1R_DLY(DSI_DLY)},
+    //{0x10860404,(DSI_DLY << 2)},//VICH1SET1R
     {0x10860400,0x00000701},//VICH1SET0R //last bit is Video-Input Operation Start
-//	{0x10860400,0x00000001},//VICH1SET0R //last bit is Video-Input Operation Start
+    //{0x10860400,0x00000001},//VICH1SET0R //last bit is Video-Input Operation Start
 };
 #endif
 
@@ -573,8 +571,10 @@ static const uint32_t vcpd_register_values[][2] = {//0x10870000  //still picture
 /* Write Block */
 static void rzg2l_registers_set(const uint32_t (*arr)[2], uint32_t len)
 {
-    for(int i=0; i<len; i++) {
-        if(arr[i][0]==0)    udelay(arr[i][1]);
+    int i;
+
+    for(i = 0; i < len; i++) {
+        if (arr[i][0] == 0) udelay(arr[i][1]);
         else                writel(arr[i][1],((uint32_t)(arr[i][0])));
     }
 }
@@ -590,7 +590,6 @@ static void rzg2l_dpi_pin_init(void)
     rzg2l_set_gpio(0x10 + 41, 1, 0, 2);
     rzg2l_set_gpio(0x10 + 45, 2, 0, 2);
 
-#if 1
     rzg2l_set_gpio(0x10 + 7, 2, 1, 2);
     rzg2l_set_gpio(0x10 + 8, 0, 1, 2);
     rzg2l_set_gpio(0x10 + 8, 1, 1, 2);
@@ -615,13 +614,13 @@ static void rzg2l_dpi_pin_init(void)
     rzg2l_set_gpio(0x10 + 17, 0, 1, 2);
     rzg2l_set_gpio(0x10 + 17, 1, 1, 2);
     rzg2l_set_gpio(0x10 + 17, 2, 1, 2);
-#endif
+
     rzg2l_set_gpio(0x10 + 6, 1, 1,2);
     rzg2l_set_gpio(0x10 + 7, 0, 1,2);
     rzg2l_set_gpio(0x10 + 7, 1, 1,2);
     rzg2l_set_gpio(0x10 + 6, 0, 1,0);
 
-	// LCD PW, BL ON
+    // LCD PW, BL ON
     ret = run_command("gpio set 7",0);
     ret = run_command("gpio set 9",0);
     ret = run_command("gpio set 92",0);
@@ -629,10 +628,9 @@ static void rzg2l_dpi_pin_init(void)
 
 }
 
-
 static void rzg2l_dpi_cpg_init(void)
 {
-        uint32_t clk_mon, clk_mon_lcd, rst_mon_led;
+        uint32_t clk_mon, clk_mon_lcd, rst_mon_lcd;
 
         printf("%s: start\r\n", __func__);
 
@@ -647,11 +645,11 @@ static void rzg2l_dpi_cpg_init(void)
         rzg2l_registers_set(cpg_dpi_rst_init, ARRAY_SIZE(cpg_dpi_rst_init));
 
         /* wait reset on */
-        rst_mon_led = (reg_read(RZG2L_CPG_BASE + CPG_RSTMON_LCDC) & RST0_MON);
-        while (rst_mon_led & RST0_MON);
+        rst_mon_lcd = (reg_read(RZG2L_CPG_BASE + CPG_RSTMON_LCDC) & RST0_MON);
+        while (rst_mon_lcd & RST0_MON);
 }
-#ifdef DSI_PANEL
 
+#ifdef DSI_PANEL
 static void rzg2l_cpg_dsi_rst_init(void)
 {
     rzg2l_registers_set(cpg_dsi_init, ARRAY_SIZE(cpg_dsi_init));
@@ -667,6 +665,7 @@ static void rzg2l_cpg_dsi_rst_init(void)
     while ((reg_read(RZG2L_CPG_BASE + CPG_RSTMON_LCDC) & LCD_RST_SUPPLY));
 }
 #endif
+
 #ifdef DSI_HDMI_BRIDGE
 /* I2C Write Register */
 static int adv7535_i2c_reg_write(struct udevice *dev, uint addr, uint mask, uint data)
@@ -952,3 +951,61 @@ static void rzg2l_lcdc_stop(void)
     printf("%s: start\r\n", __func__);
 
 }
+
+int rzg2l_video_init(void)
+{
+    printf("%s: start\r\n", __func__);
+    /* adv7535_deinit(); */
+    /* rzg2l_cpg_dsi_rst_init(); */
+
+    /* Pinmux setup for DPI panel */
+    rzg2l_dpi_pin_init();
+
+    /* CPG setup for DPI panel */
+    rzg2l_dpi_cpg_init();
+
+    /* Initialize display buffer */
+    set_white_screen_display(g_framebuffer, 0xff);
+
+    rzg2l_du_init();
+    rzg2l_vcpd_init();
+    /* rzg2l_fpvcg_init(); */
+    rzg2l_lcdc_start();
+
+    return 0;
+}
+
+
+void do_rzg2l_video_start(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+{
+    return rzg2l_lcdc_start();
+}
+
+void do_rzg2l_video_stop(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+{
+    return rzg2l_lcdc_stop();
+}
+
+int do_rzg2l_video_load_img(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+{
+    dcache_disable();
+    return run_command("fatload mmc 1:1 0x58000000 boot_img.bin",0);
+}
+
+U_BOOT_CMD(
+    rzg2l_video_start, 1, 0, do_rzg2l_video_start,
+    "Start Rzg2l",
+    ""
+);
+
+U_BOOT_CMD(
+    rzg2l_video_stop, 1, 0, do_rzg2l_video_stop,
+    "Stop Rzg2l LCDC",
+    ""
+);
+
+U_BOOT_CMD(
+    rzg2l_video_load_img, 1, 0, do_rzg2l_video_load_img,
+    "Load Rzg2l",
+    ""
+);

@@ -12,6 +12,7 @@
 #define RZG2L_SCIF0_BASE                (0x1004B800)
 #define RZG2L_SPIMULT_BASE              (0x10060000)
 #define RZG2L_SPIMULT_WBUF_BASE         (0x10070000)
+#define RZG2L_DSI_LINK_BASE             (0x10860000)
 #define RZG2L_FCPVD_BASE                (0x10880000)
 #define RZG2L_DU_BASE                   (0x10890000)
 #define RZG2L_SYC_BASE                  (0x11000000)
@@ -149,9 +150,8 @@
 #define CLK1_ON                         (1 << 1)
 #define CLK0_ONWEN                      (1 << 16)
 #define CLK1_ONWEN                      (1 << 17)
-#define CLK_EN (CLK0_ON | CLK1_ON | CLK2_ON | CLK3_ON | CLK4_ON | CLK5_ON)
-#define CLK_ONEN (CLK0_ONWEN | CLK1_ONWEN | CLK2_ONWEN | CLK3_ONWEN |
-CLK4_ONWEN | CLK5_ONWEN)
+#define LCD_CLK_EN                      (CLK1_ONWEN | CLK0_ONWEN |
+                                         CLK0_ON | CLK1_ON)
 
 #define CPG_CLKON_I2C                   0x0580
 #define I2C0_PCLK_ON                    (1 << 0)
@@ -167,6 +167,9 @@ CLK4_ONWEN | CLK5_ONWEN)
 
 #define I2C_CLK_ONWEN                   (I2C0_PCLK_ONWEN | I2C1_PCLK_ONWEN |
                                          I2C2_PCLK_ONWEN | I2C3_PCLK_ONWEN)
+
+#define CPG_CLKON_GPIO                  0x0598
+#define GPIO_CLK_EN                     (CLK0_ONWEN | CLK0_ON)
 
 #define ICCR1                           (RIIC1_BASE_ADDR + 0x000)
 #define ICCR2                           (RIIC1_BASE_ADDR + 0x004)
