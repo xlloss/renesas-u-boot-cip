@@ -391,9 +391,11 @@ static const uint32_t dsi_phy_register_values[][2] = {
 #define RXPPD2R                 0x02C8
 #define RXPPD3R                 0x02CC
 
-static const uint32_t dsi_link_register_values[][2] = {//0x10860000 //use linux value
-    //{0x00000000,1000},// wait us
-    //{RZG2L_DSI_LINK_BASE + LINKSR, 0x00001100},
+static const uint32_t dsi_link_register_values[][2] = {
+    /* {0x00000000,1000},// wait us */
+
+    /* {RZG2L_DSI_LINK_BASE + LINKSR, 0x00001100}, */
+
     {RZG2L_DSI_LINK_BASE + TXSETR, NUM_LANE_CA |
                                    LANE_DATA_EN |
                                    LANE_CLK_EN |
@@ -422,69 +424,64 @@ static const uint32_t dsi_link_register_values[][2] = {//0x10860000 //use linux 
     {RZG2L_DSI_LINK_BASE + SQCH1IER,    0x7D490110},
     {RZG2L_DSI_LINK_BASE + HSCLKSETR,   0x00000003},
     {RZG2L_DSI_LINK_BASE + VICH1PPSETR, 0x003E8000},
+
     {RZG2L_DSI_LINK_BASE + VICH1VSSETR, VICH1VSSETR_VACTIVE(LCD_VACTIVE) |
                                         VICH1VSSETR_VSA(LCD_VSYNC)},
-    /* {RZG2L_DSI_LINK_BASE + VICH1VSSETR, (LCD_VSYNC << 0) | (LCD_VSPOL << 15) | (LCD_VACTIVE << 16)}, */
+
+     /* {RZG2L_DSI_LINK_BASE + VICH1VSSETR, (LCD_VSYNC << 0)  |
+      *                                     (LCD_VSPOL << 15) |
+      *                                     (LCD_VACTIVE << 16)},
+      */
+
     {RZG2L_DSI_LINK_BASE + VICH1VPSETR, VICH1VPSETR_VFP(LCD_VFRONT) |
-                                        VICH1VPSETR_VBP(LCD_VBACK)},//VICH1VPSETR
+                                        VICH1VPSETR_VBP(LCD_VBACK)},
 
     {RZG2L_DSI_LINK_BASE + VICH1HSSETR, VICH1HSSETR_HACTIVE(LCD_HACTIVE) |
-                                        VICH1HSSETR_HSA(LCD_HSYNC)},//VICH1HSSETR
+                                        VICH1HSSETR_HSA(LCD_HSYNC)},
 
-    /* {RZG2L_DSI_LINK_BASE + VICH1HSSETR, (LCD_HSYNC << 0) | (LCD_HSPOL << 15) | (LCD_HACTIVE << 16)}, */
+    /* {RZG2L_DSI_LINK_BASE + VICH1HSSETR, (LCD_HSYNC << 0)  |
+     *                                     (LCD_HSPOL << 15) |
+     *                                     (LCD_HACTIVE << 16)},
+     */
+
     {RZG2L_DSI_LINK_BASE + VICH1HPSETR, VICH1HPSETR_HFP(LCD_HFRONT) |
                                         VICH1HPSETR_HBP(LCD_HBACK)},
+
     {RZG2L_DSI_LINK_BASE + VICH1SET1R, VICH1SET1R_DLY(DSI_DLY)},
-    //{0x10860404,(DSI_DLY << 2)},//VICH1SET1R
-    {0x10860400,0x00000701},//VICH1SET0R //last bit is Video-Input Operation Start
-    //{0x10860400,0x00000001},//VICH1SET0R //last bit is Video-Input Operation Start
+
+    /* last bit is Video-Input Operation Start */
+    {RZG2L_DSI_LINK_BASE + VICH1SET0R, HFPNOLP | HBPNOLP | HSANOLP | VSTART},
 };
 #endif
 
-#define DU_MCR0 0x00
-#define DU_MSR0 0x04
+static const uint32_t du_reg_init[][2] = {
+    {RZG2L_DU_BASE + DU_IMR0, 0x00000000},
+    {RZG2L_DU_BASE + DU_DITR0, DEMD(DATA_ENABLE) | VSPOL(HIG_ACT) |
+                               HSPOL(HIG_ACT)},
 
-static const uint32_t du_reg_init[][2] = {//0x10890000 //use linux value
-#ifdef DSI_NANEL
-    //{RZG2L_DU_BASE, 0x00010100},//DU_MCR0
-    //{0x10890004, 0x00010100},//DU_MSR0
-    //{0x10890008, 0x00000000},//DU_MSR1
-    {0x1089000c, 0x00000000},//DU_IMR0
-    {0x10890010, (1 << 8 ) | (1 << 9) | (LCD_VSPOL << 16) | (LCD_HSPOL << 17)}, //DU_DITR0
-    {0x10890014, DU_DITR1_VSA(LCD_VSYNC) | DU_DITR1_VACTIVE(LCD_VACTIVE)},      //DU_DITR1
-    {0x10890018, DU_DITR2_VBP(LCD_VBACK) | DU_DITR2_VFP(LCD_VFRONT)},           //DU_DITR2
-    {0x1089001c, DU_DITR3_HSA(LCD_HSYNC) | DU_DITR3_HACTIVE(LCD_HACTIVE)},      //DU_DITR3
-    {0x10890020, DU_DITR4_HBP(LCD_HBACK) | DU_DITR4_HFP(LCD_HFRONT)},           //DU_DITR4
-    {0x10890024, 0x00000000},   //DU_DITR5
-    //{0x10890040,0x00010000},  //DU_MCR1 //patch for underflow
-    {0x1089004c, 0x0000001F},   //DU_PBCR0
-    {0x10890050, 0x00000001},   //DU_PBCR1
-    {0x10890054, 0x00ff00ff},   //DU_PBCR2
-#else
-    {0x1089000c, 0x00000000},                                                             // DU_IMR0
-    {0x10890010, (1 << 8) | (1 << 9) | (LCD_VSPOL << 16) | (LCD_HSPOL << 17)},            // DU_DITR0  // DPI CLKMODE
-    {0x10890014, DU_DITR1_VSA(LCD_VSYNC) | DU_DITR1_VACTIVE(LCD_VACTIVE)},                // DU_DITR1
-    {0x10890018, DU_DITR2_VBP(LCD_VBACK) | DU_DITR2_VFP(LCD_VFRONT)},                     // DU_DITR2
-    {0x1089001c, DU_DITR3_HSA(LCD_HSYNC) | DU_DITR3_HACTIVE(LCD_HACTIVE)},                // DU_DITR3
-    {0x10890020, DU_DITR4_HBP(LCD_HBACK) | DU_DITR4_HFP(LCD_HFRONT)},                     // DU_DITR4
-    {0x10890024, 0x00000000},                                                             // DU_DITR5
-    {0x10890040,0x00010000},//DU_MCR1 //patch for underflow
-    {0x1089004c, 0x0000001F}, // DU_PBCR0 // check
-    {0x10890050, 0x00000001}, // DU_PBCR1 // check
-    {0x10890054, 0x00ff00ff}, // DU_PBCR2
-#endif
+    {RZG2L_DU_BASE + DU_DITR1, DU_DITR1_VSA(LCD_VSYNC) | DU_DITR1_VACTIVE(LCD_VACTIVE)},
+    {RZG2L_DU_BASE + DU_DITR2, DU_DITR2_VBP(LCD_VBACK) | DU_DITR2_VFP(LCD_VFRONT)},
+    {RZG2L_DU_BASE + DU_DITR3, DU_DITR3_HSA(LCD_HSYNC) | DU_DITR3_HACTIVE(LCD_HACTIVE)},
+    {RZG2L_DU_BASE + DU_DITR4, DU_DITR4_HBP(LCD_HBACK) | DU_DITR4_HFP(LCD_HFRONT)},
+    {RZG2L_DU_BASE + DU_DITR5, 0x00000000},
+    {RZG2L_DU_BASE + DU_MCR1,  PB_AUTOCLR | OPMD(OPMD0)},
+    {RZG2L_DU_BASE + DU_PBCR0, DU_PBCR0_PB_DEP(0x1F)},
+    {RZG2L_DU_BASE + DU_PBCR1, PB_RUFOP},
+    {RZG2L_DU_BASE + DU_PBCR2, PB_RUFDAT(0x00ff00ff)},
 };
+
+
 
 static const uint32_t vcpd_register_values[][2] = {//0x10870000  //still picture output
 #ifdef DSI_PANEL
-    {0x10870000, 0x00000000}, // VI6_CMD0
-//	{0x10870000, 0x10010F1F}, // VI6_CLK_CTRL0
-//	{0x10870000, 0xFF10FFFF}, // VI6_CLK_CTRL1
-    {0x10870018, 0x00000808}, // VI6_CLK_DCSWT
-    {0x10870028, 0x00000001}, // VI6_SRESET
-//	{0x10870038, 0x00000000}, // VI6_STATUS: cmp32 = 0x00000000
-    {0x10870048, 0x00000000}, // VI6_WPF0_IRQ_ENB
-    // {0x10870048, 0x00011003}, // VI6_WPF0_IRQ_ENB
+    {RZG2L_VCPD_BASE + VI6_CMD0, 0x00000000},
+    {RZG2L_VCPD_BASE + VI6_CLK_CTRL0, 0x10010F1F},
+    {RZG2L_VCPD_BASE + VI6_CLK_CTRL1, 0xFF10FFFF},
+    {RZG2L_VCPD_BASE + VI6_CLK_DCSWT, 0x10870018, 0x00000808},
+    {RZG2L_VCPD_BASE + VI6_SRESET, 0x00000001},
+    /* {RZG2L_VCPD_BASE + VI6_STATUS, 0x00000000}, cmp32 = 0x00000000 */
+    {RZG2L_VCPD_BASE + VI6_WPF0_IRQ_ENB, 0x00000000},
+    /* {RZG2L_VCPD_BASE + VI6_WPF0_IRQ_ENB, 0x00011003}, */
 //	{0x1087004C, 0x00000000}, // VI6_WPF0_IRQ_STA: cmp32 = 0x00000000
     {0x10870100, 0x00000007}, // VI6_DL_CTRL
     {0x10870114, 0x00000000}, // VI6_DL_SWAP0

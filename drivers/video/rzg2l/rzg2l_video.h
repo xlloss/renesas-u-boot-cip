@@ -19,33 +19,58 @@
 // #include "dsi_define_720P.h"
 //#include "dsi_define_1080P.h"
 
-#define ADV7535_SADDR 0x7A
-#define ADV7535_DSI_CEC_ADDR 0x78
+#define ADV7535_SADDR                   0x7A
+#define ADV7535_DSI_CEC_ADDR            0x78
 
 /* Du Define */
 #if 1
-//#define DU_DITR1		0x14
-#define DU_DITR1_VSA(x)		((x) << 0)
-#define DU_DITR1_VACTIVE(x)	((x) << 16)
+#define DU_MCR0                         0x00
+#define DU_MSR0                         0x04
+#define DU_DITR0                        0x10
+#define DEMD(n)                         (n << 8)
+#define FIXED_TO_LOWD                   0
+#define DATA_ENABLE                     3
+#define VSPOL(n)                        (n << 16)
+#define HSPOL(n)                        (n << 17)
+#define HIG_ACT                         1
+#define LOW_ACT                         0
 
-//#define DU_DITR2		0x18
-#define DU_DITR2_VBP(x)		((x) << 0)
-#define DU_DITR2_VFP(x)		((x) << 16)
+#define DU_DITR1                        0x14
+#define DU_DITR1_VSA(x)                 ((x) << 0)
+#define DU_DITR1_VACTIVE(x)             ((x) << 16)
 
-//#define DU_DITR3		0x1C
-#define DU_DITR3_HSA(x)		((x) << 0)
-#define DU_DITR3_HACTIVE(x)	((x) << 16)
+#define DU_DITR2                        0x18
+#define DU_DITR2_VBP(x)                 ((x) << 0)
+#define DU_DITR2_VFP(x)                 ((x) << 16)
 
-//#define DU_DITR4		0x20
-#define DU_DITR4_HBP(x)		((x) << 0)
-#define DU_DITR4_HFP(x)		((x) << 16)
+#define DU_DITR3                        0x1C
+#define DU_DITR3_HSA(x)                 ((x) << 0)
+#define DU_DITR3_HACTIVE(x)             ((x) << 16)
 
-//#define DU_DITR5		0x24
-#define DU_DITR5_VSFT(x)	((x) << 0)
-#define DU_DITR5_HSFT(x)	((x) << 16)
+#define DU_DITR4                        0x20
+#define DU_DITR4_HBP(x)                 ((x) << 0)
+#define DU_DITR4_HFP(x)                 ((x) << 16)
 
-//#define DU_PBCR0		0x4C
-#define DU_PBCR0_PB_DEP(x)	((x) << 0)
+#define DU_DITR5                        0x24
+#define DU_DITR5_VSFT(x)                ((x) << 0)
+#define DU_DITR5_HSFT(x)                ((x) << 16)
+
+#define DU_MCR1                         0x40
+#define OPMD(n)                         (n << 0)
+#define OPMD0                           0
+#define OPMD1                           1
+#define OPMD2                           2
+#define OPMD3                           3
+#define PB_AUTOCLR                      (1 << 16)
+
+#define DU_PBCR0                        0x4C
+#define DU_PBCR0_PB_DEP(x)              ((x) << 0)
+
+#define DU_PBCR1                        0x50
+#define PB_RUFOP                        (1 << 0)
+
+#define DU_PBCR2                        0x54
+#define PB_RUFDAT(n)                    (n << 0)
 #endif
 
 /* DPHY Registers */

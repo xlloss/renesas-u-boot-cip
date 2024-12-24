@@ -67,6 +67,11 @@
 #define    VIRUNI0R                                          0x360
 #define    VIRUNI1R                                          0x364
 #define    VICH1SET0R                                        0x400
+#defien    VSTART                                            (1 << 0)
+#define    HSANOLP                                           (1 << 8)
+#define    HBPNOLP                                           (1 << 9)
+#define    HFPNOLP                                           (1 << 10)
+
 #define    VICH1SET1R                                        0x404
 #define    VICH1SR                                           0x410
 #define    VICH1SCR                                          0x414

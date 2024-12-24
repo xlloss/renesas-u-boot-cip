@@ -13,6 +13,7 @@
 #define RZG2L_SPIMULT_BASE              (0x10060000)
 #define RZG2L_SPIMULT_WBUF_BASE         (0x10070000)
 #define RZG2L_DSI_LINK_BASE             (0x10860000)
+#define RZG2L_VCPD_BASE                 (0x10870000)
 #define RZG2L_FCPVD_BASE                (0x10880000)
 #define RZG2L_DU_BASE                   (0x10890000)
 #define RZG2L_SYC_BASE                  (0x11000000)
@@ -29,6 +30,7 @@
 #define RZG2L_DDR1_BASE                 (0x40000000)
 #define RZG2L_DDR2_BASE                 (0x80000000)
 #define RZG2L_DDR3_BASE                 (0x100000000)
+
 
 #define RZG2L_GICD_BASE                 (RZG2L_GIC_BASE)
 #define RZG2L_GICR_BASE                 (RZG2L_GIC_BASE + 0x00040000)
